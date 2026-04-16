@@ -19,6 +19,8 @@ python -m PyInstaller ^
   --windowed ^
   --name coin_rain ^
   --add-data "assets/coin_drop.wav;assets" ^
+  --add-data "assets/fonts;assets/fonts" ^
+  --add-data "style.qss;." ^
   coin_rain.py || goto :err
 
 echo.
