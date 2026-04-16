@@ -1,6 +1,7 @@
 """对纯逻辑函数的单元测试（不依赖 Qt / subprocess）。"""
 from rain_window import _compute_amount
 from config import Config
+from scheduler import _distribute_times
 
 
 def test_compute_amount_single_mode():
@@ -84,3 +85,32 @@ def test_config_exists(tmp_path, monkeypatch):
     assert Config.exists() is False
     target.write_text('{"version":1,"income":100,"intensity":"light","mode":"single","time":"17:00","first_time":null,"last_time":null,"count":null,"coin_style":"kaiyuan","mixed_coins":false,"installed_at":"2026-04-16T10:00:00"}')
     assert Config.exists() is True
+
+
+# ---- _distribute_times tests ----
+
+def test_distribute_times_basic():
+    assert _distribute_times("09:00", "17:00", 3) == ["09:00", "13:00", "17:00"]
+
+
+def test_distribute_times_half_hours():
+    assert _distribute_times("09:30", "17:30", 5) == ["09:30", "11:30", "13:30", "15:30", "17:30"]
+
+
+def test_distribute_times_two_triggers():
+    assert _distribute_times("10:00", "18:00", 2) == ["10:00", "18:00"]
+
+
+def test_distribute_times_minute_precision():
+    # 8:00 - 9:00 = 60min, N=7 -> 10min 间隔
+    assert _distribute_times("08:00", "09:00", 7) == [
+        "08:00", "08:10", "08:20", "08:30", "08:40", "08:50", "09:00"
+    ]
+
+
+def test_distribute_times_first_and_last_exact():
+    """首尾必须和输入一致。"""
+    result = _distribute_times("09:15", "22:45", 4)
+    assert result[0] == "09:15"
+    assert result[-1] == "22:45"
+    assert len(result) == 4
