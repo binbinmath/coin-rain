@@ -5,7 +5,7 @@ a = Analysis(
     ['coin_rain.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets/coin_drop.wav', 'assets')],
+    datas=[('assets/coin_drop.wav', 'assets'), ('assets/fonts', 'assets/fonts'), ('style.qss', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
