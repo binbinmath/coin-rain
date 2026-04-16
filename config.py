@@ -28,3 +28,40 @@ def config_dir() -> Path:
 
 def config_path() -> Path:
     return config_dir() / "config.json"
+
+
+import json
+from dataclasses import dataclass, asdict
+
+
+@dataclass
+class Config:
+    version: int
+    income: int
+    intensity: str      # "light" | "medium" | "heavy"
+    mode: str           # "single" | "multi"
+    time: str | None
+    first_time: str | None
+    last_time: str | None
+    count: int | None
+    coin_style: str     # "kaiyuan" | "yongle" | "xuanhe" | "longyang" | "modern_yuan"
+    mixed_coins: bool
+    installed_at: str   # ISO8601
+
+    def save(self) -> None:
+        config_path().write_text(
+            json.dumps(asdict(self), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    @classmethod
+    def load(cls) -> "Config | None":
+        try:
+            data = json.loads(config_path().read_text(encoding="utf-8"))
+            return cls(**data)
+        except (FileNotFoundError, json.JSONDecodeError, TypeError):
+            return None
+
+    @classmethod
+    def exists(cls) -> bool:
+        return config_path().exists()
