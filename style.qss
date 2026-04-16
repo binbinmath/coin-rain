@@ -1,0 +1,226 @@
+/* editorial 米白金 · Setup & Manage 共用 */
+
+QWidget {
+    background-color: #faf3e4;
+    color: #241810;
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+}
+
+/* Header */
+QLabel#brand {
+    font-family: "Fraunces", "Noto Serif SC", serif;
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: #241810;
+}
+QLabel#eyebrow {
+    font-family: "Fraunces", serif;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: #8a6830;
+}
+
+/* Field headings */
+QLabel#field_num {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    color: #b8925a;
+    font-style: italic;
+}
+QLabel#field_label {
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: #241810;
+    padding-left: 10px;
+}
+QLabel#field_suffix {
+    font-family: "Noto Serif SC", serif;
+    font-size: 12px;
+    color: #6b5339;
+    letter-spacing: 2px;
+}
+
+/* Income row */
+QLabel#income_prefix {
+    font-family: "Fraunces", serif;
+    font-size: 26px;
+    color: #b8925a;
+}
+QLineEdit#income_input {
+    font-family: "Fraunces", serif;
+    font-size: 38px;
+    color: #241810;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #d8c9a8;
+    padding: 2px 4px;
+}
+QLineEdit#income_input:focus {
+    border-bottom: 1px solid #b8925a;
+}
+
+/* Tiles (intensity + mode) */
+QPushButton#tile {
+    background: rgba(255, 252, 243, 0.5);
+    border: 1px solid #d8c9a8;
+    color: #241810;
+    padding: 12px 8px;
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    min-height: 52px;
+}
+QPushButton#tile:hover {
+    border: 1px solid #d4b67a;
+    background: rgba(255, 252, 243, 1);
+}
+QPushButton#tile:checked {
+    border: 1px solid #b8925a;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgba(212,182,122,0.16), stop:1 rgba(184,146,90,0.06));
+    color: #8a6830;
+    font-weight: 500;
+}
+
+/* Time input */
+QLineEdit#time_input {
+    font-family: "Fraunces", serif;
+    font-size: 38px;
+    color: #241810;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #d8c9a8;
+    padding: 2px 4px;
+}
+QLineEdit#time_input:focus {
+    border-bottom: 1px solid #b8925a;
+}
+QLabel#time_hint {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 12px;
+    color: #6b5339;
+}
+
+/* Separator */
+QFrame#hrule {
+    color: rgba(216, 201, 168, 0.6);
+    background: rgba(216, 201, 168, 0.6);
+    max-height: 1px;
+}
+
+/* Note */
+QLabel#note {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 11px;
+    color: #a08c6c;
+    letter-spacing: 1px;
+}
+
+/* Buttons */
+QPushButton#btn_secondary {
+    background: transparent;
+    border: 1px solid #b8925a;
+    color: #8a6830;
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 10px 24px;
+    font-weight: 500;
+}
+QPushButton#btn_secondary:hover {
+    background: rgba(184, 146, 90, 0.08);
+}
+QPushButton#btn_primary {
+    background: #241810;
+    color: #faf3e4;
+    border: 1px solid #241810;
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 10px 26px;
+    font-weight: 500;
+}
+QPushButton#btn_primary:hover {
+    background: #8a6830;
+    border: 1px solid #8a6830;
+}
+
+/* Validation error */
+QLineEdit[invalid="true"] {
+    border-bottom: 1px solid #a83e2e;
+}
+
+/* ManageWindow */
+QWidget#summary_card {
+    background: rgba(255, 252, 243, 0.5);
+    border: 1px solid #d8c9a8;
+}
+QLabel#cell_k {
+    font-family: "Noto Serif SC", serif;
+    font-size: 10px;
+    color: #8a6830;
+    letter-spacing: 4px;
+}
+QLabel#cell_v {
+    font-family: "Fraunces", serif;
+    font-size: 28px;
+    color: #241810;
+    letter-spacing: 1px;
+}
+QLabel#cell_sub {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 11px;
+    color: #a08c6c;
+    letter-spacing: 1px;
+}
+QWidget#schedule_strip {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgba(212,182,122,0.12), stop:1 rgba(184,146,90,0.04));
+    border: 1px solid #b8925a;
+}
+QLabel#strip_label {
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    color: #8a6830;
+    letter-spacing: 4px;
+}
+QLabel#strip_next {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    color: #241810;
+}
+QLabel#strip_remain {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 13px;
+    color: #6b5339;
+}
+QPushButton#toggle_on {
+    background: #241810;
+    color: #faf3e4;
+    border: 1px solid #b8925a;
+    padding: 8px 20px;
+    font-family: "Noto Serif SC", serif;
+    letter-spacing: 3px;
+}
+QPushButton#toggle_off {
+    background: rgba(255,252,243,0.5);
+    color: #6b5339;
+    border: 1px solid #b8925a;
+    padding: 8px 20px;
+    font-family: "Noto Serif SC", serif;
+    letter-spacing: 3px;
+}
+QLabel#tag_line {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 12px;
+    color: #6b5339;
+}
