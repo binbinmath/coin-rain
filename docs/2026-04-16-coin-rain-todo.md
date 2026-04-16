@@ -56,3 +56,24 @@
 
 - 完成一项后，在本文件末尾追加"✅ 已完成：<日期> <简述>"。
 - 若新增改进想法，继续往「改进项列表」追加编号小节。
+
+---
+
+## ✅ 已完成
+
+- **2026-04-16 阶段 1**：到账大字 count-up（B 巨字金光风格）+ 先 1 秒出字再落币 + 默认金币换成开元通宝（附永乐/宣和/龙洋/现代¥ 共 5 款备选）。tag: `stage-1-complete`
+- **2026-04-16 阶段 2**：editorial 米白金风 SetupWindow + ManageWindow；`%APPDATA%\CoinRain\config.json` 持久化；Fraunces + 思源宋体 TTF 嵌入 exe。tag: `stage-2-complete`
+- **2026-04-16 阶段 3**：`scheduler.py` schtasks 封装（单次 1 任务 / 多次 N 独立任务带 `--nth/--total`）；ManageWindow 开关联动 schtasks；下次预告条基于 `scheduler.status()`；5 款金币 + 混合下落（配置里开 `mixed_coins`）。tag: `stage-3-complete`
+
+**打包产物**：`dist/coin_rain.exe` 约 60 MB（比未加字体的 44 MB 增加 16 MB，主要来自 25 MB 的 Noto Serif SC 完整变体字体；未来可用 `fontTools subset` 裁剪到 <1 MB 大幅瘦身）。
+
+**交付模块清单**：
+- `coin_rain.py` — 入口 + argv 分流
+- `rain_window.py` — CoinRainWindow + 5 款金币绘制 + 到账大字 count-up
+- `config.py` — Config dataclass + 路径工具
+- `config_window.py` — SetupWindow + ManageWindow
+- `scheduler.py` — schtasks 封装 + 时间分布
+- `fonts.py` — 字体加载
+- `style.qss` — editorial 米白金 QSS 样式表
+- `assets/fonts/*.ttf` — 嵌入字体
+- `tests/test_logic.py` — 15 个 pytest，覆盖 `_compute_amount` / `Config.load/save` / `_distribute_times`
