@@ -38,10 +38,7 @@ SHADOW_COLOR = QColor(0, 0, 0, 76)
 # =======================================================
 
 
-def resource_path(rel: str) -> Path:
-    """在开发态和 PyInstaller 打包态都能找到 assets/ 下的资源。"""
-    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
-    return base / rel
+from config import resource_path
 
 
 @dataclass
