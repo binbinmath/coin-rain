@@ -35,6 +35,15 @@ COIN_SYMBOL = "¥"
 COIN_SYMBOL_COLOR = QColor("#5C4A0A")
 SHADOW_COLOR = QColor(0, 0, 0, 76)
 
+# 开元通宝配色
+KY_FILL_CENTER = QColor("#f4d88a")
+KY_FILL_MID = QColor("#c89b4a")
+KY_FILL_EDGE = QColor("#7a5420")
+KY_STROKE = QColor("#3a2810")
+KY_TEXT = QColor("#2a1810")
+KY_HOLE_FILL = QColor("#1a1410")
+KY_CHARS = ("开", "元", "通", "宝")  # 上 / 下 / 右 / 左 顺序
+
 # 到账大字样式
 AMOUNT_FONT_FAMILY = "Fraunces"  # 阶段 2 才嵌入字体，此时先用 fallback
 AMOUNT_COLOR = QColor("#f7d14a")
@@ -214,8 +223,202 @@ class CoinRainWindow(QWidget):
         p.setRenderHint(QPainter.SmoothPixmapTransform, True)
         self._draw_amount(p)
         for c in self.coins:
-            self._draw_coin(p, c)
+            style = random.choice(self._mix_styles) if self._mixed else self._coin_style
+            self._draw_coin_by_style(p, c, style)
         p.end()
+
+    def _draw_coin_by_style(self, p: QPainter, c: Coin, style: str) -> None:
+        fn = {
+            "kaiyuan": self._draw_kaiyuan,
+            "yongle": self._draw_yongle,
+            "xuanhe": self._draw_xuanhe,
+            "longyang": self._draw_longyang,
+            "modern_yuan": self._draw_coin,  # 复用原来的 ¥ 绘制
+        }.get(style, self._draw_kaiyuan)
+        fn(p, c)
+
+    def _draw_kaiyuan(self, p: QPainter, c: Coin) -> None:
+        """开元通宝 · 做旧金色 · 方孔圆钱。"""
+        # 阴影
+        p.save()
+        p.translate(c.x, c.y + c.diameter * 0.55)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(SHADOW_COLOR))
+        p.drawEllipse(QPointF(0, 0), c.diameter * 0.45, c.diameter * 0.12)
+        p.restore()
+
+        scale_x = max(0.08, abs(math.cos(c.angle)))
+        p.save()
+        p.translate(c.x, c.y)
+        p.scale(scale_x, 1.0)
+        r = c.diameter / 2
+
+        grad = QRadialGradient(-r * 0.3, -r * 0.3, r * 1.5)
+        grad.setColorAt(0.0, KY_FILL_CENTER)
+        grad.setColorAt(0.4, KY_FILL_MID)
+        grad.setColorAt(1.0, KY_FILL_EDGE)
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(KY_STROKE, max(1.0, c.diameter * 0.02)))
+        p.drawEllipse(QPointF(0, 0), r, r)
+
+        # 内圈
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(KY_STROKE, 1))
+        p.drawEllipse(QPointF(0, 0), r * 0.93, r * 0.93)
+
+        # 方孔
+        hole = c.diameter * 0.36
+        p.setBrush(QBrush(KY_HOLE_FILL))
+        p.setPen(QPen(KY_STROKE, max(1.0, c.diameter * 0.025)))
+        p.drawRect(int(-hole / 2), int(-hole / 2), int(hole), int(hole))
+
+        # 4 字：开 元 通 宝（上 下 右 左）
+        font = QFont("Noto Serif SC")
+        font.setPixelSize(int(c.diameter * 0.19))
+        font.setBold(True)
+        p.setFont(font)
+        p.setPen(KY_TEXT)
+        off = c.diameter * 0.34
+        positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
+        fm = p.fontMetrics()
+        for (dx, dy), ch in zip(positions, KY_CHARS):
+            tw = fm.horizontalAdvance(ch)
+            th = fm.ascent() - fm.descent()
+            p.drawText(QPointF(dx - tw / 2, dy + th / 2), ch)
+
+        # 高光
+        p.save()
+        p.translate(-r * 0.35, -r * 0.4)
+        p.rotate(-25)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QColor(255, 245, 210, 64))
+        p.drawEllipse(QPointF(0, 0), r * 0.45, r * 0.22)
+        p.restore()
+
+        p.restore()
+
+    def _draw_yongle(self, p: QPainter, c: Coin) -> None:
+        """永乐通宝 · 鎏金亮面 + 方孔。"""
+        p.save()
+        p.translate(c.x, c.y + c.diameter * 0.55)
+        p.setPen(Qt.NoPen); p.setBrush(QBrush(SHADOW_COLOR))
+        p.drawEllipse(QPointF(0, 0), c.diameter * 0.45, c.diameter * 0.12)
+        p.restore()
+
+        scale_x = max(0.08, abs(math.cos(c.angle)))
+        p.save(); p.translate(c.x, c.y); p.scale(scale_x, 1.0)
+        r = c.diameter / 2
+
+        grad = QRadialGradient(-r*0.3, -r*0.3, r*1.6)
+        grad.setColorAt(0.0, QColor("#fff0b8"))
+        grad.setColorAt(0.3, QColor("#f7d14a"))
+        grad.setColorAt(0.7, QColor("#a87420"))
+        grad.setColorAt(1.0, QColor("#6a4818"))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.03)))
+        p.drawEllipse(QPointF(0, 0), r, r)
+
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(QColor(255, 240, 180, 76), 1))
+        p.drawEllipse(QPointF(0, 0), r*0.93, r*0.93)
+
+        hole = c.diameter * 0.36
+        p.setBrush(QBrush(QColor("#1a1410")))
+        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.03)))
+        p.drawRect(int(-hole/2), int(-hole/2), int(hole), int(hole))
+
+        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.19))
+        p.setFont(font); p.setPen(QColor("#1a1008"))
+        off = c.diameter * 0.34
+        chars = ("永", "乐", "通", "宝")
+        positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
+        fm = p.fontMetrics()
+        for (dx, dy), ch in zip(positions, chars):
+            tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
+            p.drawText(QPointF(dx - tw/2, dy + th/2), ch)
+        p.restore()
+
+    def _draw_xuanhe(self, p: QPainter, c: Coin) -> None:
+        """宣和通宝 · 瘦金体温润古金。"""
+        p.save(); p.translate(c.x, c.y + c.diameter*0.55)
+        p.setPen(Qt.NoPen); p.setBrush(QBrush(SHADOW_COLOR))
+        p.drawEllipse(QPointF(0, 0), c.diameter*0.45, c.diameter*0.12)
+        p.restore()
+
+        scale_x = max(0.08, abs(math.cos(c.angle)))
+        p.save(); p.translate(c.x, c.y); p.scale(scale_x, 1.0)
+        r = c.diameter / 2
+        grad = QRadialGradient(-r*0.3, -r*0.3, r*1.5)
+        grad.setColorAt(0.0, QColor("#e8c880"))
+        grad.setColorAt(0.35, QColor("#b88838"))
+        grad.setColorAt(0.75, QColor("#6a4818"))
+        grad.setColorAt(1.0, QColor("#3a2810"))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.025)))
+        p.drawEllipse(QPointF(0, 0), r, r)
+
+        hole = c.diameter * 0.36
+        p.setBrush(QBrush(QColor("#1a1410")))
+        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.025)))
+        p.drawRect(int(-hole/2), int(-hole/2), int(hole), int(hole))
+
+        font = QFont("Noto Serif SC"); font.setItalic(True); font.setPixelSize(int(c.diameter*0.20))
+        p.setFont(font); p.setPen(QColor("#1a1008"))
+        off = c.diameter * 0.34
+        chars = ("宣", "和", "通", "宝")
+        positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
+        fm = p.fontMetrics()
+        for (dx, dy), ch in zip(positions, chars):
+            tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
+            p.drawText(QPointF(dx - tw/2, dy + th/2), ch)
+        p.restore()
+
+    def _draw_longyang(self, p: QPainter, c: Coin) -> None:
+        """壹圓龙洋 · 齿边无孔 · 中央大字 + ✦ 装饰。"""
+        p.save(); p.translate(c.x, c.y + c.diameter*0.55)
+        p.setPen(Qt.NoPen); p.setBrush(QBrush(SHADOW_COLOR))
+        p.drawEllipse(QPointF(0, 0), c.diameter*0.45, c.diameter*0.12)
+        p.restore()
+
+        scale_x = max(0.08, abs(math.cos(c.angle)))
+        p.save(); p.translate(c.x, c.y); p.scale(scale_x, 1.0)
+        r = c.diameter / 2
+
+        grad = QRadialGradient(-r*0.3, -r*0.3, r*1.55)
+        grad.setColorAt(0.0, QColor("#f8e8b8"))
+        grad.setColorAt(0.4, QColor("#d4a838"))
+        grad.setColorAt(0.85, QColor("#8a5818"))
+        grad.setColorAt(1.0, QColor("#5a3810"))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.028)))
+        p.drawEllipse(QPointF(0, 0), r, r)
+
+        # 齿边 reeds
+        p.setPen(QPen(QColor(42, 24, 16, 140), max(0.8, c.diameter*0.015)))
+        for i in range(26):
+            ang = math.tau * i / 26
+            rx1 = math.cos(ang) * r * 0.98
+            ry1 = math.sin(ang) * r * 0.98
+            rx2 = math.cos(ang) * r * 0.88
+            ry2 = math.sin(ang) * r * 0.88
+            p.drawLine(QPointF(rx1, ry1), QPointF(rx2, ry2))
+
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(QColor(42, 24, 16, 150), 1))
+        p.drawEllipse(QPointF(0, 0), r*0.8, r*0.8)
+
+        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.35))
+        p.setFont(font); p.setPen(QColor("#1a1008"))
+        fm = p.fontMetrics()
+        for ch, dy in (("壹", -c.diameter*0.10), ("圓", c.diameter*0.22)):
+            tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
+            p.drawText(QPointF(-tw/2, dy + th/2), ch)
+
+        star_font = QFont(); star_font.setPixelSize(int(c.diameter*0.13))
+        p.setFont(star_font); p.setPen(QColor(26, 16, 8, 200))
+        p.drawText(QPointF(-c.diameter*0.18, -c.diameter*0.32), "✦")
+        p.drawText(QPointF(c.diameter*0.08, -c.diameter*0.32), "✦")
+        p.restore()
 
     def _draw_amount(self, p: QPainter) -> None:
         """绘制中央金色大字 + 下方中文副标。"""
