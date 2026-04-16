@@ -34,6 +34,20 @@ COIN_STROKE = QColor("#8B6914")
 COIN_SYMBOL = "¥"
 COIN_SYMBOL_COLOR = QColor("#5C4A0A")
 SHADOW_COLOR = QColor(0, 0, 0, 76)
+
+# 到账大字样式
+AMOUNT_FONT_FAMILY = "Fraunces"  # 阶段 2 才嵌入字体，此时先用 fallback
+AMOUNT_COLOR = QColor("#f7d14a")
+AMOUNT_SHADOW_COLOR = QColor(0, 0, 0, 160)
+AMOUNT_GLOW_COLOR = QColor(247, 209, 74, 128)
+AMOUNT_SIZE_RATIO = 0.16  # 数字高度 = 屏幕高 * 此值
+CURRENCY_SIZE_RATIO = 0.46  # ¥ 字号 = 数字字号 * 此值
+LABEL_FONT_FAMILY = "Noto Serif SC"
+LABEL_COLOR = QColor("#f5e6c8")
+LABEL_SIZE_RATIO = 0.022  # 中文副标字号 = 屏幕高 * 此值
+
+COUNTUP_DURATION_MS = 1000  # count-up 持续时间
+COIN_START_DELAY_MS = 1000  # 金币开始下落的延迟
 # ============================================
 
 
@@ -95,6 +109,28 @@ class CoinRainWindow(QWidget):
 
         self._setup_sound()
 
+        # 到账大字状态
+        self._target_amount = 300  # 阶段 1 硬编码；阶段 2/3 从 config/argv 读
+        self._current_amount = 0.0
+        self._label_text = "今 日 到 账"
+        self._coin_style = "kaiyuan"
+        self._mixed = False
+        self._mix_styles = ["kaiyuan"]
+
+    def set_amount(self, amount: int, label: str) -> None:
+        """在 start() 之前调用，设置本次到账大字的目标值和副标。"""
+        self._target_amount = amount
+        self._label_text = label
+
+    def set_coin_style(self, style: str, mixed: bool = False) -> None:
+        """设置金币样式。mixed=True 时从全部 5 款中均匀随机抽取。"""
+        self._coin_style = style
+        self._mixed = mixed
+        if mixed:
+            self._mix_styles = ["kaiyuan", "yongle", "xuanhe", "longyang", "modern_yuan"]
+        else:
+            self._mix_styles = [style]
+
     def _setup_sound(self) -> None:
         wav_path = resource_path("assets/coin_drop.wav")
         self._wav_path: str | None = str(wav_path) if wav_path.exists() else None
@@ -102,10 +138,14 @@ class CoinRainWindow(QWidget):
     def start(self) -> None:
         self.show()
         self._elapsed.start()
+        # 先 1 秒显示 count-up 大字，之后才开始落币 + 音效
+        QTimer.singleShot(COIN_START_DELAY_MS, self._start_coins)
+        self.timer.start()
+
+    def _start_coins(self) -> None:
         if self._wav_path:
             winsound.PlaySound(self._wav_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
         self._spawn_batch()
-        self.timer.start()
 
     def _spawn_batch(self) -> None:
         if self._batch_index >= BATCH_COUNT:
@@ -134,6 +174,15 @@ class CoinRainWindow(QWidget):
 
     def _tick(self) -> None:
         now = self._elapsed.elapsed()
+
+        # count-up 大字推进
+        if now <= COUNTUP_DURATION_MS:
+            progress = now / COUNTUP_DURATION_MS
+            eased = 1 - (1 - progress) ** 3  # ease-out cubic
+            self._current_amount = eased * self._target_amount
+        else:
+            self._current_amount = float(self._target_amount)
+
         if self._last_tick_ms is None:
             dt = 1.0 / FPS
         else:
@@ -150,8 +199,10 @@ class CoinRainWindow(QWidget):
                 alive.append(c)
         self.coins = alive
 
+        # 大字完成 + 所有币落下 + 无残留 = 退出
         all_spawned = self._spawned >= self._total_to_spawn
-        if all_spawned and not self.coins:
+        after_countup = now >= COUNTUP_DURATION_MS
+        if all_spawned and not self.coins and after_countup:
             QApplication.quit()
             return
 
@@ -161,9 +212,67 @@ class CoinRainWindow(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing, True)
         p.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        self._draw_amount(p)
         for c in self.coins:
             self._draw_coin(p, c)
         p.end()
+
+    def _draw_amount(self, p: QPainter) -> None:
+        """绘制中央金色大字 + 下方中文副标。"""
+        w = self._screen_w
+        h = self._screen_h
+
+        num_px = int(h * AMOUNT_SIZE_RATIO)
+        label_px = int(h * LABEL_SIZE_RATIO)
+
+        num_text = f"¥{int(round(self._current_amount))}"
+
+        num_font = QFont(AMOUNT_FONT_FAMILY)
+        num_font.setPixelSize(num_px)
+        num_font.setWeight(QFont.Medium)
+
+        p.setFont(num_font)
+        fm = p.fontMetrics()
+        tw = fm.horizontalAdvance(num_text)
+        tx = (w - tw) / 2
+        ty = h * 0.44 + fm.ascent() / 2
+
+        # Glow 层：多次偏移绘制模拟发光
+        p.save()
+        p.setPen(AMOUNT_GLOW_COLOR)
+        for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1), (-3, 0), (3, 0)]:
+            p.drawText(QPointF(tx + dx, ty + dy), num_text)
+        p.restore()
+
+        # Shadow
+        p.save()
+        p.setPen(AMOUNT_SHADOW_COLOR)
+        p.drawText(QPointF(tx + 4, ty + 6), num_text)
+        p.restore()
+
+        # 主数字
+        p.save()
+        p.setPen(AMOUNT_COLOR)
+        p.drawText(QPointF(tx, ty), num_text)
+        p.restore()
+
+        # 下方中文副标
+        label_font = QFont(LABEL_FONT_FAMILY)
+        label_font.setPixelSize(label_px)
+        label_font.setWeight(QFont.Medium)
+        label_font.setLetterSpacing(QFont.PercentageSpacing, 200)
+        p.setFont(label_font)
+        fm2 = p.fontMetrics()
+        lw = fm2.horizontalAdvance(self._label_text)
+        lx = (w - lw) / 2
+        ly = ty + label_px * 2.2
+
+        p.save()
+        p.setPen(AMOUNT_SHADOW_COLOR)
+        p.drawText(QPointF(lx + 2, ly + 2), self._label_text)
+        p.restore()
+        p.setPen(LABEL_COLOR)
+        p.drawText(QPointF(lx, ly), self._label_text)
 
     def _draw_coin(self, p: QPainter, c: Coin) -> None:
         # 阴影
