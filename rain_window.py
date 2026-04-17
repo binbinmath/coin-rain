@@ -17,8 +17,8 @@ COIN_COUNT_MIN = 60
 COIN_COUNT_MAX = 90
 BATCH_COUNT = 8
 BATCH_INTERVAL_MS = 350
-COIN_DIAMETER_MIN = 36
-COIN_DIAMETER_MAX = 60
+COIN_DIAMETER_MIN = 48
+COIN_DIAMETER_MAX = 76
 GRAVITY = 550.0
 VY_INIT_MIN = 120.0
 VY_INIT_MAX = 240.0
@@ -28,21 +28,23 @@ ROT_SPEED_MAX = 10.0
 FPS = 60
 TIMEOUT_SAFETY_MS = 12000
 
-COIN_FILL_CENTER = QColor("#FFE066")
-COIN_FILL_EDGE = QColor("#D4A017")
+COIN_FILL_CENTER = QColor("#fff3a8")  # 更亮
+COIN_FILL_EDGE = QColor("#e8ac1a")    # 更饱和
 COIN_STROKE = QColor("#8B6914")
 COIN_SYMBOL = "¥"
-COIN_SYMBOL_COLOR = QColor("#5C4A0A")
+COIN_SYMBOL_COLOR = QColor("#3a2408")  # 更深，对比更强
 SHADOW_COLOR = QColor(0, 0, 0, 76)
 
-# 开元通宝配色
-KY_FILL_CENTER = QColor("#f4d88a")
-KY_FILL_MID = QColor("#c89b4a")
-KY_FILL_EDGE = QColor("#7a5420")
-KY_STROKE = QColor("#3a2810")
-KY_TEXT = QColor("#2a1810")
-KY_HOLE_FILL = QColor("#1a1410")
+# 开元通宝配色（鲜亮黄金色，不做旧）
+KY_FILL_CENTER = QColor("#fff2a8")   # 高光中心，近乎白金
+KY_FILL_MID = QColor("#f7c84a")      # 鲜亮金色
+KY_FILL_EDGE = QColor("#b8852a")     # 温暖铜金（不发黑）
+KY_STROKE = QColor("#5a3a10")
+KY_TEXT = QColor("#3a1a05")          # 深棕黑，对比度够
+KY_HOLE_FILL = QColor("#2a1410")
 KY_CHARS = ("开", "元", "通", "宝")  # 上 / 下 / 右 / 左 顺序
+KY_TEXT_SIZE_RATIO = 0.28            # 字号占直径比例（原 0.19 太小）
+KY_TEXT_OFFSET_RATIO = 0.36          # 字到中心距离
 
 # 到账大字样式
 AMOUNT_FONT_FAMILY = "Fraunces"  # 阶段 2 才嵌入字体，此时先用 fallback
@@ -238,7 +240,7 @@ class CoinRainWindow(QWidget):
         fn(p, c)
 
     def _draw_kaiyuan(self, p: QPainter, c: Coin) -> None:
-        """开元通宝 · 做旧金色 · 方孔圆钱。"""
+        """开元通宝 · 鲜亮金色 · 方孔圆钱。"""
         # 阴影
         p.save()
         p.translate(c.x, c.y + c.diameter * 0.55)
@@ -255,7 +257,7 @@ class CoinRainWindow(QWidget):
 
         grad = QRadialGradient(-r * 0.3, -r * 0.3, r * 1.5)
         grad.setColorAt(0.0, KY_FILL_CENTER)
-        grad.setColorAt(0.4, KY_FILL_MID)
+        grad.setColorAt(0.45, KY_FILL_MID)
         grad.setColorAt(1.0, KY_FILL_EDGE)
         p.setBrush(QBrush(grad))
         p.setPen(QPen(KY_STROKE, max(1.0, c.diameter * 0.02)))
@@ -264,21 +266,21 @@ class CoinRainWindow(QWidget):
         # 内圈
         p.setBrush(Qt.NoBrush)
         p.setPen(QPen(KY_STROKE, 1))
-        p.drawEllipse(QPointF(0, 0), r * 0.93, r * 0.93)
+        p.drawEllipse(QPointF(0, 0), r * 0.92, r * 0.92)
 
         # 方孔
-        hole = c.diameter * 0.36
+        hole = c.diameter * 0.32  # 缩小孔，给字让出空间
         p.setBrush(QBrush(KY_HOLE_FILL))
         p.setPen(QPen(KY_STROKE, max(1.0, c.diameter * 0.025)))
         p.drawRect(int(-hole / 2), int(-hole / 2), int(hole), int(hole))
 
-        # 4 字：开 元 通 宝（上 下 右 左）
+        # 4 字：开 元 通 宝（上 下 右 左）—— 字号和偏移都加大
         font = QFont("Noto Serif SC")
-        font.setPixelSize(int(c.diameter * 0.19))
+        font.setPixelSize(int(c.diameter * KY_TEXT_SIZE_RATIO))
         font.setBold(True)
         p.setFont(font)
         p.setPen(KY_TEXT)
-        off = c.diameter * 0.34
+        off = c.diameter * KY_TEXT_OFFSET_RATIO
         positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
         fm = p.fontMetrics()
         for (dx, dy), ch in zip(positions, KY_CHARS):
@@ -291,8 +293,8 @@ class CoinRainWindow(QWidget):
         p.translate(-r * 0.35, -r * 0.4)
         p.rotate(-25)
         p.setPen(Qt.NoPen)
-        p.setBrush(QColor(255, 245, 210, 64))
-        p.drawEllipse(QPointF(0, 0), r * 0.45, r * 0.22)
+        p.setBrush(QColor(255, 255, 220, 110))  # 高光更亮
+        p.drawEllipse(QPointF(0, 0), r * 0.5, r * 0.24)
         p.restore()
 
         p.restore()
@@ -310,36 +312,43 @@ class CoinRainWindow(QWidget):
         r = c.diameter / 2
 
         grad = QRadialGradient(-r*0.3, -r*0.3, r*1.6)
-        grad.setColorAt(0.0, QColor("#fff0b8"))
-        grad.setColorAt(0.3, QColor("#f7d14a"))
-        grad.setColorAt(0.7, QColor("#a87420"))
-        grad.setColorAt(1.0, QColor("#6a4818"))
+        grad.setColorAt(0.0, QColor("#fffad8"))   # 高光中心
+        grad.setColorAt(0.35, QColor("#ffdc5a"))  # 鲜亮金
+        grad.setColorAt(0.75, QColor("#c88c22"))  # 温金边缘
+        grad.setColorAt(1.0, QColor("#8a5818"))
         p.setBrush(QBrush(grad))
-        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.03)))
+        p.setPen(QPen(QColor("#5a3810"), max(1.0, c.diameter*0.03)))
         p.drawEllipse(QPointF(0, 0), r, r)
 
         p.setBrush(Qt.NoBrush)
-        p.setPen(QPen(QColor(255, 240, 180, 76), 1))
-        p.drawEllipse(QPointF(0, 0), r*0.93, r*0.93)
+        p.setPen(QPen(QColor(255, 250, 200, 130), 1))
+        p.drawEllipse(QPointF(0, 0), r*0.92, r*0.92)
 
-        hole = c.diameter * 0.36
+        hole = c.diameter * 0.32
         p.setBrush(QBrush(QColor("#1a1410")))
-        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.03)))
+        p.setPen(QPen(QColor("#5a3810"), max(1.0, c.diameter*0.03)))
         p.drawRect(int(-hole/2), int(-hole/2), int(hole), int(hole))
 
-        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.19))
-        p.setFont(font); p.setPen(QColor("#1a1008"))
-        off = c.diameter * 0.34
+        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.28))
+        p.setFont(font); p.setPen(QColor("#2a1408"))
+        off = c.diameter * 0.36
         chars = ("永", "乐", "通", "宝")
         positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
         fm = p.fontMetrics()
         for (dx, dy), ch in zip(positions, chars):
             tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
             p.drawText(QPointF(dx - tw/2, dy + th/2), ch)
+
+        # 高光
+        p.save()
+        p.translate(-r*0.35, -r*0.4); p.rotate(-28)
+        p.setPen(Qt.NoPen); p.setBrush(QColor(255, 255, 230, 120))
+        p.drawEllipse(QPointF(0, 0), r*0.5, r*0.24)
+        p.restore()
         p.restore()
 
     def _draw_xuanhe(self, p: QPainter, c: Coin) -> None:
-        """宣和通宝 · 瘦金体温润古金。"""
+        """宣和通宝 · 瘦金体明亮古金。"""
         p.save(); p.translate(c.x, c.y + c.diameter*0.55)
         p.setPen(Qt.NoPen); p.setBrush(QBrush(SHADOW_COLOR))
         p.drawEllipse(QPointF(0, 0), c.diameter*0.45, c.diameter*0.12)
@@ -349,28 +358,34 @@ class CoinRainWindow(QWidget):
         p.save(); p.translate(c.x, c.y); p.scale(scale_x, 1.0)
         r = c.diameter / 2
         grad = QRadialGradient(-r*0.3, -r*0.3, r*1.5)
-        grad.setColorAt(0.0, QColor("#e8c880"))
-        grad.setColorAt(0.35, QColor("#b88838"))
-        grad.setColorAt(0.75, QColor("#6a4818"))
-        grad.setColorAt(1.0, QColor("#3a2810"))
+        grad.setColorAt(0.0, QColor("#ffec98"))   # 明亮浅金
+        grad.setColorAt(0.4, QColor("#e8b838"))   # 鲜亮金
+        grad.setColorAt(0.85, QColor("#a0701c"))  # 温金边
+        grad.setColorAt(1.0, QColor("#6a4818"))
         p.setBrush(QBrush(grad))
-        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.025)))
+        p.setPen(QPen(QColor("#4a2810"), max(1.0, c.diameter*0.025)))
         p.drawEllipse(QPointF(0, 0), r, r)
 
-        hole = c.diameter * 0.36
+        hole = c.diameter * 0.32
         p.setBrush(QBrush(QColor("#1a1410")))
-        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.025)))
+        p.setPen(QPen(QColor("#4a2810"), max(1.0, c.diameter*0.025)))
         p.drawRect(int(-hole/2), int(-hole/2), int(hole), int(hole))
 
-        font = QFont("Noto Serif SC"); font.setItalic(True); font.setPixelSize(int(c.diameter*0.20))
-        p.setFont(font); p.setPen(QColor("#1a1008"))
-        off = c.diameter * 0.34
+        font = QFont("Noto Serif SC"); font.setItalic(True); font.setBold(True); font.setPixelSize(int(c.diameter*0.28))
+        p.setFont(font); p.setPen(QColor("#2a1408"))
+        off = c.diameter * 0.36
         chars = ("宣", "和", "通", "宝")
         positions = [(0, -off), (0, off), (off, 0), (-off, 0)]
         fm = p.fontMetrics()
         for (dx, dy), ch in zip(positions, chars):
             tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
             p.drawText(QPointF(dx - tw/2, dy + th/2), ch)
+
+        p.save()
+        p.translate(-r*0.35, -r*0.4); p.rotate(-25)
+        p.setPen(Qt.NoPen); p.setBrush(QColor(255, 250, 210, 100))
+        p.drawEllipse(QPointF(0, 0), r*0.5, r*0.24)
+        p.restore()
         p.restore()
 
     def _draw_longyang(self, p: QPainter, c: Coin) -> None:
@@ -385,16 +400,16 @@ class CoinRainWindow(QWidget):
         r = c.diameter / 2
 
         grad = QRadialGradient(-r*0.3, -r*0.3, r*1.55)
-        grad.setColorAt(0.0, QColor("#f8e8b8"))
-        grad.setColorAt(0.4, QColor("#d4a838"))
-        grad.setColorAt(0.85, QColor("#8a5818"))
-        grad.setColorAt(1.0, QColor("#5a3810"))
+        grad.setColorAt(0.0, QColor("#fff4c8"))
+        grad.setColorAt(0.4, QColor("#f7c840"))  # 鲜亮金
+        grad.setColorAt(0.85, QColor("#a87020"))
+        grad.setColorAt(1.0, QColor("#6a4010"))
         p.setBrush(QBrush(grad))
-        p.setPen(QPen(QColor("#2a1810"), max(1.0, c.diameter*0.028)))
+        p.setPen(QPen(QColor("#4a2810"), max(1.0, c.diameter*0.028)))
         p.drawEllipse(QPointF(0, 0), r, r)
 
         # 齿边 reeds
-        p.setPen(QPen(QColor(42, 24, 16, 140), max(0.8, c.diameter*0.015)))
+        p.setPen(QPen(QColor(74, 40, 16, 180), max(0.8, c.diameter*0.015)))
         for i in range(26):
             ang = math.tau * i / 26
             rx1 = math.cos(ang) * r * 0.98
@@ -404,20 +419,28 @@ class CoinRainWindow(QWidget):
             p.drawLine(QPointF(rx1, ry1), QPointF(rx2, ry2))
 
         p.setBrush(Qt.NoBrush)
-        p.setPen(QPen(QColor(42, 24, 16, 150), 1))
+        p.setPen(QPen(QColor(74, 40, 16, 180), 1))
         p.drawEllipse(QPointF(0, 0), r*0.8, r*0.8)
 
-        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.35))
-        p.setFont(font); p.setPen(QColor("#1a1008"))
+        # 大字 壹圓 —— 字号从 0.35 提到 0.42
+        font = QFont("Noto Serif SC"); font.setBold(True); font.setPixelSize(int(c.diameter*0.42))
+        p.setFont(font); p.setPen(QColor("#2a1408"))
         fm = p.fontMetrics()
-        for ch, dy in (("壹", -c.diameter*0.10), ("圓", c.diameter*0.22)):
+        for ch, dy in (("壹", -c.diameter*0.14), ("圓", c.diameter*0.22)):
             tw = fm.horizontalAdvance(ch); th = fm.ascent() - fm.descent()
             p.drawText(QPointF(-tw/2, dy + th/2), ch)
 
-        star_font = QFont(); star_font.setPixelSize(int(c.diameter*0.13))
-        p.setFont(star_font); p.setPen(QColor(26, 16, 8, 200))
-        p.drawText(QPointF(-c.diameter*0.18, -c.diameter*0.32), "✦")
+        star_font = QFont(); star_font.setPixelSize(int(c.diameter*0.15))
+        p.setFont(star_font); p.setPen(QColor(42, 20, 8, 220))
+        p.drawText(QPointF(-c.diameter*0.2, -c.diameter*0.32), "✦")
         p.drawText(QPointF(c.diameter*0.08, -c.diameter*0.32), "✦")
+
+        # 高光
+        p.save()
+        p.translate(-r*0.35, -r*0.45); p.rotate(-28)
+        p.setPen(Qt.NoPen); p.setBrush(QColor(255, 250, 220, 110))
+        p.drawEllipse(QPointF(0, 0), r*0.5, r*0.24)
+        p.restore()
         p.restore()
 
     def _draw_amount(self, p: QPainter) -> None:
@@ -504,7 +527,7 @@ class CoinRainWindow(QWidget):
 
         font = QFont()
         font.setBold(True)
-        font.setPixelSize(int(c.diameter * 0.55))
+        font.setPixelSize(int(c.diameter * 0.70))  # ¥ 更大
         p.setFont(font)
         p.setPen(COIN_SYMBOL_COLOR)
         fm = p.fontMetrics()

@@ -86,18 +86,66 @@ QPushButton#tile:checked {
     font-weight: 500;
 }
 
-/* Time input */
-QLineEdit#time_input {
+/* Time input (QTimeEdit + QSpinBox 共享编辑风) */
+QTimeEdit#time_input,
+QTimeEdit#time_input_small,
+QSpinBox#count_input {
     font-family: "Fraunces", serif;
-    font-size: 38px;
     color: #241810;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid #d8c9a8;
-    padding: 2px 4px;
+    background: rgba(255, 252, 243, 0.6);
+    border: 1px solid #d8c9a8;
+    border-radius: 2px;
+    padding: 4px 8px;
+    selection-background-color: rgba(184, 146, 90, 0.35);
+    selection-color: #241810;
 }
-QLineEdit#time_input:focus {
-    border-bottom: 1px solid #b8925a;
+QTimeEdit#time_input {
+    font-size: 30px;
+}
+QTimeEdit#time_input_small {
+    font-size: 22px;
+}
+QSpinBox#count_input {
+    font-size: 22px;
+    qproperty-alignment: AlignCenter;
+}
+QTimeEdit#time_input:focus,
+QTimeEdit#time_input_small:focus,
+QSpinBox#count_input:focus {
+    border: 1px solid #b8925a;
+    background: rgba(255, 252, 243, 1.0);
+}
+QTimeEdit::up-button,
+QTimeEdit::down-button,
+QSpinBox::up-button,
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    width: 20px;
+    background: rgba(184, 146, 90, 0.10);
+    border: none;
+    border-left: 1px solid #d8c9a8;
+}
+QTimeEdit::up-button, QSpinBox::up-button { subcontrol-position: top right; }
+QTimeEdit::down-button, QSpinBox::down-button { subcontrol-position: bottom right; }
+QTimeEdit::up-button:hover,
+QTimeEdit::down-button:hover,
+QSpinBox::up-button:hover,
+QSpinBox::down-button:hover {
+    background: rgba(184, 146, 90, 0.28);
+}
+QTimeEdit::up-arrow, QSpinBox::up-arrow {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 6px solid #8a6830;
+    margin-bottom: 1px;
+}
+QTimeEdit::down-arrow, QSpinBox::down-arrow {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #8a6830;
+    margin-top: 1px;
 }
 QLabel#time_hint {
     font-family: "Fraunces", serif;

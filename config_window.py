@@ -6,10 +6,11 @@ import subprocess
 import sys
 from datetime import datetime
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
-    QLineEdit, QPushButton, QButtonGroup, QFrame, QMessageBox
+    QLineEdit, QPushButton, QButtonGroup, QFrame, QMessageBox,
+    QTimeEdit, QSpinBox
 )
 
 from config import Config, resource_path
@@ -180,25 +181,41 @@ class SetupWindow(QWidget):
         col = QVBoxLayout()
         col.addLayout(self._field_head("04", "触 发 时 间"))
         self.single_row = QHBoxLayout()
-        self.time_input = QLineEdit(initial.time if (initial and initial.time) else DEFAULT_TIME)
-        self.time_input.setObjectName("time_input"); self.time_input.setFixedWidth(140)
+        self.time_input = self._make_time_edit(
+            initial.time if (initial and initial.time) else DEFAULT_TIME,
+            big=True,
+        )
+        self.time_input.setObjectName("time_input")
+        self.time_input.setFixedWidth(160)
         self.time_hint = QLabel("每天按时落下\n「今日到账 ¥X」的金币雨")
         self.time_hint.setObjectName("time_hint")
         self.single_row.addWidget(self.time_input)
         self.single_row.addWidget(self.time_hint, 1)
         col.addLayout(self.single_row)
 
+        # 多次模式 —— QTimeEdit 两个 + QSpinBox 一个
         self.multi_row = QHBoxLayout()
-        self.first_input = QLineEdit(initial.first_time if initial and initial.first_time else DEFAULT_FIRST)
-        self.last_input = QLineEdit(initial.last_time if initial and initial.last_time else DEFAULT_LAST)
-        self.count_input = QLineEdit(str(initial.count if initial and initial.count else DEFAULT_COUNT))
-        for le in (self.first_input, self.last_input, self.count_input):
-            le.setObjectName("time_input"); le.setFixedWidth(100)
-            # 多次模式下字号略小
-            f = le.font(); f.setPixelSize(22); le.setFont(f)
-        first_label = QLabel("首"); first_label.setObjectName("field_suffix")
-        last_label = QLabel("末"); last_label.setObjectName("field_suffix")
-        count_label = QLabel("次数"); count_label.setObjectName("field_suffix")
+        self.multi_row.setSpacing(10)
+        self.first_input = self._make_time_edit(
+            initial.first_time if initial and initial.first_time else DEFAULT_FIRST,
+            big=False,
+        )
+        self.last_input = self._make_time_edit(
+            initial.last_time if initial and initial.last_time else DEFAULT_LAST,
+            big=False,
+        )
+        for te in (self.first_input, self.last_input):
+            te.setObjectName("time_input_small")
+            te.setFixedWidth(108)
+        self.count_input = QSpinBox()
+        self.count_input.setObjectName("count_input")
+        self.count_input.setRange(2, 12)
+        self.count_input.setValue(initial.count if (initial and initial.count) else DEFAULT_COUNT)
+        self.count_input.setFixedWidth(80)
+        self.count_input.setSuffix(" 次")
+        first_label = QLabel("首 次"); first_label.setObjectName("field_suffix")
+        last_label = QLabel("末 次"); last_label.setObjectName("field_suffix")
+        count_label = QLabel("次 数"); count_label.setObjectName("field_suffix")
         self.multi_row.addWidget(first_label)
         self.multi_row.addWidget(self.first_input)
         self.multi_row.addWidget(last_label)
@@ -211,6 +228,19 @@ class SetupWindow(QWidget):
             w.hide()
         col.addLayout(self.multi_row)
         return col
+
+    def _make_time_edit(self, hhmm: str, big: bool) -> QTimeEdit:
+        te = QTimeEdit()
+        te.setDisplayFormat("HH:mm")
+        te.setButtonSymbols(QTimeEdit.UpDownArrows)
+        te.setAlignment(Qt.AlignCenter)
+        te.setWrapping(True)
+        try:
+            h, m = map(int, hhmm.split(":"))
+            te.setTime(QTime(h, m))
+        except (ValueError, AttributeError):
+            te.setTime(QTime(17, 0))
+        return te
 
     # ---- Logic ----
 
@@ -250,34 +280,23 @@ class SetupWindow(QWidget):
             ok = False
 
         if self._mode == "single":
-            t = _validate_time(self.time_input.text())
-            self._mark_invalid(self.time_input, t is None)
-            if t is None:
-                ok = False
+            t = self.time_input.time().toString("HH:mm")
             first = last = None
             count = None
         else:
-            first = _validate_time(self.first_input.text())
-            last = _validate_time(self.last_input.text())
-            self._mark_invalid(self.first_input, first is None)
-            self._mark_invalid(self.last_input, last is None)
-            try:
-                count = int(self.count_input.text())
-                count_ok = 2 <= count <= 12
-            except ValueError:
-                count = None
-                count_ok = False
-            self._mark_invalid(self.count_input, not count_ok)
+            first = self.first_input.time().toString("HH:mm")
+            last = self.last_input.time().toString("HH:mm")
+            count = self.count_input.value()
             t = None
 
-            if not (first and last and count_ok):
+            diff = _time_to_minutes(last) - _time_to_minutes(first)
+            # first < last 且间距够容下 count 次（至少 N-1 分钟）
+            if diff < (count - 1):
+                QMessageBox.warning(
+                    self, "时间范围不足",
+                    f"「末次时间」必须晚于「首次时间」至少 {count - 1} 分钟，以容纳 {count} 次等距触发。",
+                )
                 ok = False
-            else:
-                diff = _time_to_minutes(last) - _time_to_minutes(first)
-                if diff < (count - 1):
-                    self._mark_invalid(self.first_input, True)
-                    self._mark_invalid(self.last_input, True)
-                    ok = False
 
         if not ok:
             return None
