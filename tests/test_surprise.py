@@ -2,7 +2,7 @@
 import random
 from datetime import date
 
-from surprise import _cumulative_node_amount
+from surprise import _cumulative_node_amount, _holiday_subtitle
 
 
 def test_cumulative_first_node_at_10x_daily():
@@ -35,3 +35,55 @@ def test_cumulative_high_income():
     # I=3000 → N=floor(log10(30000))=4 → 第 1 次 10000（第 4 天）；第 2 次 100000（第 34 天）
     assert _cumulative_node_amount(days=4, income=3000) == 10000
     assert _cumulative_node_amount(days=34, income=3000) == 100000
+
+
+def test_holiday_chunjie_day_of():
+    assert _holiday_subtitle(date(2026, 2, 17)) == "春 节 快 乐  ✦"
+
+
+def test_holiday_chunjie_eve():
+    assert _holiday_subtitle(date(2026, 2, 16)) == "预 祝 春 节 快 乐"
+
+
+def test_holiday_yuandan_day_of():
+    assert _holiday_subtitle(date(2027, 1, 1)) == "元 旦 快 乐"
+
+
+def test_holiday_yuandan_eve():
+    # 12/31 是上一年的元旦前一天
+    assert _holiday_subtitle(date(2026, 12, 31)) == "预 祝 元 旦 快 乐"
+
+
+def test_holiday_qingming_2026():
+    assert _holiday_subtitle(date(2026, 4, 5)) == "清 明 节 安 康"
+    assert _holiday_subtitle(date(2026, 4, 4)) == "预 祝 清 明 假 期"
+
+
+def test_holiday_qingming_2028_is_april_4():
+    assert _holiday_subtitle(date(2028, 4, 4)) == "清 明 节 安 康"
+    assert _holiday_subtitle(date(2028, 4, 3)) == "预 祝 清 明 假 期"
+
+
+def test_holiday_christmas_no_eve_reminder():
+    assert _holiday_subtitle(date(2026, 12, 25)) == "圣 诞 快 乐  ★"
+    assert _holiday_subtitle(date(2026, 12, 24)) is None
+
+
+def test_holiday_halloween_day_only():
+    assert _holiday_subtitle(date(2026, 10, 31)) == "万 圣 节 快 乐  🎃"
+    assert _holiday_subtitle(date(2026, 10, 30)) is None
+
+
+def test_holiday_none():
+    assert _holiday_subtitle(date(2026, 6, 3)) is None
+
+
+def test_holiday_dragon_boat():
+    assert _holiday_subtitle(date(2026, 6, 19)) == "端 午 安 康"
+    assert _holiday_subtitle(date(2026, 6, 18)) == "预 祝 端 午 安 康"
+
+
+def test_holiday_mid_autumn_or_national_overlap():
+    # 2028-10-03 既在国庆假里，又是当年的中秋
+    res = _holiday_subtitle(date(2028, 10, 3))
+    assert res is not None

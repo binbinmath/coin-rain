@@ -89,6 +89,42 @@ def _cumulative_node_amount(*, days: int, income: int) -> int | None:
     return None
 
 
+# (公历日期, 当天文案, 前一天文案 or None)
+# 顺序即优先级（前面的先命中）
+_FIXED_HOLIDAYS = [
+    ((1, 1),   "元 旦 快 乐",       "预 祝 元 旦 快 乐"),
+    ((5, 1),   "劳 动 节 快 乐",     "预 祝 五 一 快 乐"),
+    ((10, 1),  "国 庆 快 乐  ✦",     "预 祝 国 庆 快 乐"),
+    ((10, 31), "万 圣 节 快 乐  🎃",  None),
+    ((12, 25), "圣 诞 快 乐  ★",     None),
+]
+
+_LUNAR_HOLIDAYS = [
+    (SPRING_FESTIVAL, "春 节 快 乐  ✦",  "预 祝 春 节 快 乐"),
+    (DRAGON_BOAT,     "端 午 安 康",      "预 祝 端 午 安 康"),
+    (MID_AUTUMN,      "中 秋 快 乐",      "预 祝 中 秋 团 圆"),
+    (QINGMING,        "清 明 节 安 康",    "预 祝 清 明 假 期"),
+]
+
+
+def _holiday_subtitle(today: date) -> str | None:
+    """如果今天 / 明天是节日，返回对应文案；否则 None。"""
+    tomorrow = today + timedelta(days=1)
+    for (m, d), day_text, eve_text in _FIXED_HOLIDAYS:
+        if today.month == m and today.day == d:
+            return day_text
+        if eve_text and tomorrow.month == m and tomorrow.day == d:
+            return eve_text
+    for table, day_text, eve_text in _LUNAR_HOLIDAYS:
+        target = table.get(today.year)
+        if target == today:
+            return day_text
+        target_next = table.get(tomorrow.year)
+        if target_next and target_next == tomorrow and eve_text:
+            return eve_text
+    return None
+
+
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:
