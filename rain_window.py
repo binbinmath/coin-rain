@@ -222,6 +222,25 @@ class CoinRainWindow(QWidget):
     def _start_coins(self) -> None:
         # 切到金币下落音，覆盖之前的 slot 转动声
         self._play_coin()
+        # spec §8：幸运币（如果命中）—— 比最大币更大、慢、屏幕中上方掉下
+        if self._lucky_enabled and self._pixmaps and not self._lucky_spawned:
+            self._lucky_spawned = True
+            d = COIN_DIAMETER_MAX * 1.8 * self._size_scale
+            vy_lo, vy_hi = self._params["vy_init"]
+            base_angle = random.uniform(0, math.tau)
+            if self._flip_all:
+                base_angle += math.pi
+            self.coins.append(Coin(
+                x=self._screen_w / 2 + random.uniform(-40, 40),
+                y=-120,
+                vx=random.uniform(-15, 15),
+                vy=random.uniform(vy_lo, vy_hi) * 0.7,   # 慢一点多停留
+                diameter=d,
+                angle=base_angle,
+                angular_v=random.uniform(ROT_SPEED_MIN, ROT_SPEED_MAX) * 0.6
+                          * random.choice((-1, 1)),
+                style_idx=random.randrange(len(self._pixmaps)),
+            ))
         self._spawn_batch()
 
     def _spawn_batch(self) -> None:
