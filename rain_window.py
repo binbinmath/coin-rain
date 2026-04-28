@@ -397,23 +397,37 @@ class CoinRainWindow(QWidget):
             cell_x = base_x + yen_w + gap + i * cell_w
             self._draw_reel_digit(p, cell_x, base_y, cell_w, digit_value, fm)
 
-        # 下方中文副标（不滚）
+        # 下方中文副标：subtitle 优先，否则用 label（向后兼容）
+        text_main = self._subtitle_text if self._subtitle_text else self._label_text
         label_font = QFont(LABEL_FONT_FAMILY)
         label_font.setPixelSize(label_px)
         label_font.setWeight(QFont.Medium)
         label_font.setLetterSpacing(QFont.PercentageSpacing, 200)
         p.setFont(label_font)
         fm2 = p.fontMetrics()
-        lw = fm2.horizontalAdvance(self._label_text)
+        lw = fm2.horizontalAdvance(text_main)
         lx = (w - lw) / 2
         ly = base_y + label_px * 2.2
 
         p.save()
         p.setPen(AMOUNT_SHADOW_COLOR)
-        p.drawText(QPointF(lx + 2, ly + 2), self._label_text)
+        p.drawText(QPointF(lx + 2, ly + 2), text_main)
         p.restore()
         p.setPen(LABEL_COLOR)
-        p.drawText(QPointF(lx, ly), self._label_text)
+        p.drawText(QPointF(lx, ly), text_main)
+
+        # spec §8：幸运币命中时，¥X 上方多一行小字
+        if self._lucky_enabled:
+            tip = "✦   接  住  一  枚  幸  运  币   ✦"
+            tw = fm2.horizontalAdvance(tip)
+            tx = (w - tw) / 2
+            ty = base_y - num_px * 0.85
+            p.save()
+            p.setPen(AMOUNT_SHADOW_COLOR)
+            p.drawText(QPointF(tx + 2, ty + 2), tip)
+            p.restore()
+            p.setPen(LABEL_COLOR)
+            p.drawText(QPointF(tx, ty), tip)
 
     # ---- slot-machine helpers ----
 
