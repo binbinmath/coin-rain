@@ -63,6 +63,32 @@ QINGMING: dict[int, date] = {
 }
 
 
+def _cumulative_node_amount(*, days: int, income: int) -> int | None:
+    """如果第 `days` 天命中累计节点，返回该节点金额；否则 None。
+
+    规则 (spec §4.1)：
+      N = floor(log10(10*I))
+      第 1 次节点：10^N（在前 10 天内必命中）
+      第 2 次节点：10^(N+1)（10–100 天）
+      之后每涨一个 10^(N+1) 命中一次（2·10^(N+1)、3·10^(N+1)、...）
+    """
+    if income <= 0 or days < 1:
+        return None
+    total_today = days * income
+    total_yesterday = (days - 1) * income
+    n = int(math.floor(math.log10(10 * income)))
+    first = 10 ** n
+    second = 10 ** (n + 1)
+    if total_yesterday < first <= total_today:
+        return first
+    if total_today >= second:
+        k_today = total_today // second
+        k_yesterday = total_yesterday // second
+        if k_today > k_yesterday:
+            return int(k_today * second)
+    return None
+
+
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:
