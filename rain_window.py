@@ -239,19 +239,32 @@ class CoinRainWindow(QWidget):
             QTimer.singleShot(self._params["interval_ms"], self._spawn_batch)
 
     def _make_coin(self) -> Coin:
-        d = random.uniform(COIN_DIAMETER_MIN, COIN_DIAMETER_MAX)
+        # spec §7.2: 11/11 直径加倍（_size_scale）
+        d = random.uniform(COIN_DIAMETER_MIN, COIN_DIAMETER_MAX) * self._size_scale
         vy_lo, vy_hi = self._params["vy_init"]
         # 出生在屏幕顶端附近（不再远在屏幕之上），让"先弹一下"的动作可见
         spawn_y = random.uniform(-d * 0.4, d * 0.6)
+        # spec §9：固定 style_idx 还是每枚独立抽
+        if self._pixmaps:
+            if self._coin_mode is not None:
+                style = self._coin_mode % len(self._pixmaps)
+            else:
+                style = random.randrange(len(self._pixmaps))
+        else:
+            style = 0
+        # spec §7.2: 4/1 整场翻面 —— 起始 angle 加 π，让 cos 缩放从负向开始
+        base_angle = random.uniform(0, math.tau)
+        if self._flip_all:
+            base_angle += math.pi
         return Coin(
             x=random.uniform(-d * 0.2, self._screen_w + d * 0.2),
             y=spawn_y,
             vx=random.uniform(-VX_INIT_ABS_MAX, VX_INIT_ABS_MAX),
             vy=random.uniform(vy_lo, vy_hi),  # 负值 = 起步向上一弹
             diameter=d,
-            angle=random.uniform(0, math.tau),
+            angle=base_angle,
             angular_v=random.uniform(ROT_SPEED_MIN, ROT_SPEED_MAX) * random.choice((-1, 1)),
-            style_idx=random.randrange(len(self._pixmaps)) if self._pixmaps else 0,
+            style_idx=style,
         )
 
     def _tick(self) -> None:
