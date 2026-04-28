@@ -2,7 +2,13 @@
 import random
 from datetime import date
 
-from surprise import _cumulative_node_amount, _holiday_subtitle, _days_subtitle
+from surprise import (
+    _cumulative_node_amount,
+    _holiday_subtitle,
+    _days_subtitle,
+    _easter_subtitle,
+    compute_visual_overrides,
+)
 
 
 def test_cumulative_first_node_at_10x_daily():
@@ -119,3 +125,27 @@ def test_days_no_node():
     assert _days_subtitle(8) is None
     assert _days_subtitle(31) is None
     assert _days_subtitle(100) is None
+
+
+def test_easter_april_fools():
+    assert _easter_subtitle(date(2026, 4, 1)) == "愚 人 节 快 乐  ☘"
+
+
+def test_easter_double_eleven():
+    assert _easter_subtitle(date(2026, 11, 11)) == "今 天 晚 饭  有 人 陪 么 ?"
+
+
+def test_easter_other_day():
+    assert _easter_subtitle(date(2026, 5, 5)) is None
+
+
+def test_visual_overrides_april_fools():
+    assert compute_visual_overrides(today=date(2026, 4, 1)) == {"flip_all": True}
+
+
+def test_visual_overrides_double_eleven():
+    assert compute_visual_overrides(today=date(2026, 11, 11)) == {"size_scale": 2.0}
+
+
+def test_visual_overrides_normal():
+    assert compute_visual_overrides(today=date(2026, 5, 5)) == {}

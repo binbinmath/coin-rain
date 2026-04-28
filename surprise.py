@@ -138,6 +138,14 @@ def _days_subtitle(days: int) -> str | None:
     return None
 
 
+def _easter_subtitle(today: date) -> str | None:
+    if today.month == 4 and today.day == 1:
+        return "愚 人 节 快 乐  ☘"
+    if today.month == 11 and today.day == 11:
+        return "今 天 晚 饭  有 人 陪 么 ?"
+    return None
+
+
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:
@@ -145,7 +153,12 @@ def compute_subtitle(*, days_since_install: int, today: date,
 
 
 def compute_visual_overrides(*, today: date) -> dict:
-    raise NotImplementedError
+    """spec §7.2：4/1 全反着掉，11/11 直径加倍。"""
+    if today.month == 4 and today.day == 1:
+        return {"flip_all": True}
+    if today.month == 11 and today.day == 11:
+        return {"size_scale": 2.0}
+    return {}
 
 
 def pick_lucky(*, rng: random.Random | None = None) -> bool:
