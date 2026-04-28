@@ -146,6 +146,72 @@ def _easter_subtitle(today: date) -> str | None:
     return None
 
 
+DEFAULT_CAPTIONS: list[str] = [
+    # 接地气职场（14）
+    "晚 饭 加 鸡 腿",
+    "今 天 又 值 了",
+    "再 来 一 波",
+    "周 五 倒 计 时  X",   # 模板，运行时填具体天数
+    "领 导 今 天 笑 了 一 下",
+    "摸 鱼 也 有 工 资",
+    "打 工 人 之 光",
+    "没 白 来",
+    "今 天 再 撑 一 下",
+    "钱 到 心 安",
+    "今 日 KPI 已 完 成",
+    "咖 啡 自 由 已 实 现",
+    "晚 饭 涨 一 档",
+    "社 畜 高 光 时 刻",
+    # 文艺克制（15）
+    "雨 落 如 约",
+    "金 光 归 位",
+    "今 夜 灯 下 值 得",
+    "一 日 不 空",
+    "钟 摆 不 停",
+    "风 也 知 道",
+    "账 上 有 光",
+    "晚 一 些 也 没 关 系",
+    "月 亮 也 在 看",
+    "今 日 已 安",
+    "落 雨 知 春",
+    "青 灯 黄 卷",
+    "河 水 不 急",
+    "诚 意 已 至",
+    "此 间 日 常",
+    # 调皮温暖（15）
+    "进 账 啦  ✦",
+    "今 天 的 咖 啡 你 请",
+    "奖 励 一 只 布 丁",
+    "小 金 库 ＋＋",
+    "钱 钱 来 了",
+    "布 丁 自 由",
+    "咖 啡 加 奶 油",
+    "账 户 +1s",
+    "来 了 来 了",
+    "今 天 也 蛮 好 的",
+    "留 一 颗 给 自 己",
+    "小 happy 一 下",
+    "gold gold gold",
+    "日 子 在 鼓 掌",
+    "我 替 你 高 兴",
+]
+
+
+def _default_caption(*, today: date, rng: random.Random) -> str:
+    """从默认文案池随机抽一句。周末过滤掉"周五倒计时"模板。"""
+    pool = DEFAULT_CAPTIONS
+    if today.weekday() >= 5:  # 周六/周日
+        pool = [c for c in pool if "周 五 倒 计 时" not in c]
+    pick = rng.choice(pool)
+    if "周 五 倒 计 时  X" in pick:
+        # weekday: 周一=0 ... 周五=4 ... 周日=6
+        delta = (4 - today.weekday()) % 7
+        if delta == 0:
+            return "今 天 就 是 周 五"
+        pick = pick.replace("X", f"{delta} 天")
+    return pick
+
+
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:

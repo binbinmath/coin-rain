@@ -7,6 +7,8 @@ from surprise import (
     _holiday_subtitle,
     _days_subtitle,
     _easter_subtitle,
+    _default_caption,
+    DEFAULT_CAPTIONS,
     compute_visual_overrides,
 )
 
@@ -149,3 +151,36 @@ def test_visual_overrides_double_eleven():
 
 def test_visual_overrides_normal():
     assert compute_visual_overrides(today=date(2026, 5, 5)) == {}
+
+
+def test_default_pool_size():
+    # spec §10.1：14 + 15 + 15 = 44
+    assert len(DEFAULT_CAPTIONS) == 44
+
+
+def test_default_caption_deterministic_with_seed():
+    rng_a = random.Random(42)
+    rng_b = random.Random(42)
+    a = _default_caption(today=date(2026, 5, 5), rng=rng_a)
+    b = _default_caption(today=date(2026, 5, 5), rng=rng_b)
+    assert a == b
+
+
+def test_default_caption_friday_countdown_filled():
+    # 反复抽，看 "周 五 倒 计 时" 出现时被填进了具体天数
+    seen = False
+    for seed in range(500):
+        c = _default_caption(today=date(2026, 5, 6), rng=random.Random(seed))  # 周三
+        if "周 五 倒 计 时" in c:
+            assert "X" not in c
+            assert "2 天" in c
+            seen = True
+            break
+    assert seen
+
+
+def test_default_caption_no_friday_countdown_on_weekend():
+    # 周六周日不会抽到 "周五倒计时"
+    for seed in range(500):
+        c = _default_caption(today=date(2026, 5, 9), rng=random.Random(seed))  # 周六
+        assert "周 五 倒 计 时" not in c
