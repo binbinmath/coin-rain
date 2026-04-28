@@ -11,6 +11,8 @@ from surprise import (
     DEFAULT_CAPTIONS,
     compute_subtitle,
     compute_visual_overrides,
+    pick_lucky,
+    pick_coin_mode,
 )
 
 
@@ -268,3 +270,31 @@ def test_subtitle_amount_thousand_separator():
         is_last_trigger=True,
     )
     assert "¥10,000" in out
+
+
+def test_pick_lucky_about_3pct():
+    rng = random.Random(0)
+    hits = sum(pick_lucky(rng=rng) for _ in range(10000))
+    # 3% ± 1.5%（10000 次足够紧）
+    assert 150 <= hits <= 450, f"got {hits}, expected ~300"
+
+
+def test_pick_coin_mode_80_20():
+    rng = random.Random(0)
+    n = 6
+    mixed = 0
+    single = 0
+    for _ in range(10000):
+        m = pick_coin_mode(n_styles=n, rng=rng)
+        if m is None:
+            mixed += 1
+        else:
+            assert 0 <= m < n
+            single += 1
+    # 期望 8000 single / 2000 mixed，给 ±400 浮动
+    assert 7600 <= single <= 8400
+    assert 1600 <= mixed <= 2400
+
+
+def test_pick_coin_mode_zero_styles():
+    assert pick_coin_mode(n_styles=0, rng=random.Random(0)) is None

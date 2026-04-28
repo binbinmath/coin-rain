@@ -248,8 +248,16 @@ def compute_visual_overrides(*, today: date) -> dict:
 
 
 def pick_lucky(*, rng: random.Random | None = None) -> bool:
-    raise NotImplementedError
+    """spec §8：3% 幸运币概率。"""
+    rng = rng or random.Random()
+    return rng.random() < 0.03
 
 
 def pick_coin_mode(*, n_styles: int, rng: random.Random | None = None) -> int | None:
-    raise NotImplementedError
+    """spec §9：80% 单一币种（返回 style_idx），20% 混合（返回 None）。"""
+    rng = rng or random.Random()
+    if n_styles <= 0:
+        return None
+    if rng.random() < 0.20:
+        return None
+    return rng.randrange(n_styles)
