@@ -298,3 +298,50 @@ def test_pick_coin_mode_80_20():
 
 def test_pick_coin_mode_zero_styles():
     assert pick_coin_mode(n_styles=0, rng=random.Random(0)) is None
+
+
+def test_e2e_chunjie_eve_with_milestone_collision():
+    # 第 100 天 + I=200，命中累计 ¥20,000；今天又是春节前一天 —— 累计赢
+    out = compute_subtitle(
+        days_since_install=100,
+        today=date(2026, 2, 16),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "累 计 突 破" in out
+    assert "20,000" in out
+
+
+def test_e2e_chunjie_eve_no_milestone():
+    # 第 11 天 + I=200，累计 2200 不命中节点；春节前一天赢
+    out = compute_subtitle(
+        days_since_install=11,
+        today=date(2026, 2, 16),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "预 祝 春 节" in out
+
+
+def test_e2e_april_first_visual_and_subtitle():
+    today = date(2026, 4, 1)
+    sub = compute_subtitle(
+        days_since_install=11,
+        today=today,
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "愚 人 节" in sub
+    assert compute_visual_overrides(today=today) == {"flip_all": True}
+
+
+def test_e2e_double_eleven_visual_and_subtitle():
+    today = date(2026, 11, 11)
+    sub = compute_subtitle(
+        days_since_install=11,
+        today=today,
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "晚 饭" in sub
+    assert compute_visual_overrides(today=today) == {"size_scale": 2.0}
