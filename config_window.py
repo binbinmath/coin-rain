@@ -120,31 +120,34 @@ def _validate_time(text: str) -> str | None:
 _active_rain_windows: list = []  # 占住引用，防止 CoinRainWindow 被 GC
 
 
-def _launch_test_rain() -> None:
+def _launch_test_rain(day_offset: int = 0, force_income: int | None = None) -> None:
     """同进程内开一个 CoinRainWindow 预览动画（不再 spawn 子进程）。
 
     子进程版会让 winsound 在某些 Windows 音频路由下静音；同进程跑就和命令行
     `coin_rain --rain --test` 完全等价，音效路径一致。
+
+    - day_offset: "今天" 虚拟成真实日期 + 这个偏移，用来预览未来几天的金币雨
+    - force_income: 强制覆盖日收入（"下一天"测试按钮锁死 ¥400 用）
     """
-    from datetime import date, datetime
+    from datetime import date, datetime, timedelta
     from rain_window import CoinRainWindow, _compute_amount, _load_coin_pixmaps
     import surprise
 
     cfg = Config.load()
-    income = cfg.income if cfg else 300
+    income = force_income if force_income is not None else (cfg.income if cfg else 300)
     intensity = cfg.intensity if cfg else "medium"
     installed_at = cfg.installed_at if cfg else ""
     amount = _compute_amount(income=income, nth=1, total=1)
 
-    today = date.today()
+    today = date.today() + timedelta(days=day_offset)
     if installed_at:
         try:
             d0 = datetime.fromisoformat(installed_at).date()
             days = max((today - d0).days + 1, 1)
         except ValueError:
-            days = 1
+            days = max(1 + day_offset, 1)
     else:
-        days = 1
+        days = max(1 + day_offset, 1)
 
     w = CoinRainWindow()
     w.set_amount(amount, "今 日 到 账")
@@ -961,6 +964,11 @@ class ManageWindow(QWidget):
         self.test_btn = QPushButton("先  试")
         self.test_btn.setObjectName("btn_secondary")
         self.test_btn.setCursor(Qt.PointingHandCursor)
+        self.advance_btn = QPushButton("下  一  天")
+        self.advance_btn.setObjectName("btn_secondary")
+        self.advance_btn.setCursor(Qt.PointingHandCursor)
+        self.advance_btn.setToolTip("锁定 ¥400/天 + 单次触发，每点一次模拟过一天，看后面节日和里程碑效果")
+        self._test_day_offset = 0
         self.edit_btn = QPushButton("修  改  配  置")
         self.edit_btn.setObjectName("btn_secondary")
         self.edit_btn.setCursor(Qt.PointingHandCursor)
@@ -969,12 +977,14 @@ class ManageWindow(QWidget):
         self.close_btn.setCursor(Qt.PointingHandCursor)
         foot.addWidget(self.coffee_btn)
         foot.addWidget(self.test_btn)
+        foot.addWidget(self.advance_btn)
         foot.addWidget(self.edit_btn)
         foot.addWidget(self.close_btn)
         v.addLayout(foot)
 
         # wire
-        self.test_btn.clicked.connect(_launch_test_rain)
+        self.test_btn.clicked.connect(lambda: _launch_test_rain())
+        self.advance_btn.clicked.connect(self._on_advance_day)
         self.edit_btn.clicked.connect(self._on_edit)
         self.close_btn.clicked.connect(self.close)
         self.toggle_on.clicked.connect(lambda: self._set_enabled(True))
@@ -1105,3 +1115,12 @@ class ManageWindow(QWidget):
         self._setup = SetupWindow(initial=self._cfg)
         self._setup.show()
         self.close()
+
+    def _on_advance_day(self) -> None:
+        """模拟"过一天"测试按钮：累加 day_offset，锁定 ¥400/天单次触发，看节日 / 里程碑。"""
+        from datetime import date, timedelta
+        self._test_day_offset += 1
+        sim_date = date.today() + timedelta(days=self._test_day_offset)
+        # 按钮文本反映当前模拟到第几天 + 模拟日期
+        self.advance_btn.setText(f"下  一  天 +{self._test_day_offset} · {sim_date.strftime('%m-%d')}")
+        _launch_test_rain(day_offset=self._test_day_offset, force_income=400)
