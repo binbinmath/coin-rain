@@ -2,7 +2,7 @@
 import random
 from datetime import date
 
-from surprise import _cumulative_node_amount, _holiday_subtitle
+from surprise import _cumulative_node_amount, _holiday_subtitle, _days_subtitle
 
 
 def test_cumulative_first_node_at_10x_daily():
@@ -87,3 +87,35 @@ def test_holiday_mid_autumn_or_national_overlap():
     # 2028-10-03 既在国庆假里，又是当年的中秋
     res = _holiday_subtitle(date(2028, 10, 3))
     assert res is not None
+
+
+def test_days_first_week():
+    assert _days_subtitle(7) == "陪 你 赚 了  1 周"
+
+
+def test_days_one_month():
+    assert _days_subtitle(30) == "陪 你 赚 了  1 个 月"
+
+
+def test_days_three_months():
+    assert _days_subtitle(90) == "陪 你 赚 了  3 个 月"
+
+
+def test_days_one_year():
+    assert _days_subtitle(365) == "陪 你 赚 了  1 年"
+
+
+def test_days_two_years():
+    assert _days_subtitle(730) == "陪 你 赚 了  2 年"
+
+
+def test_days_year_priority_over_month():
+    assert _days_subtitle(360) == "陪 你 赚 了  12 个 月"
+    assert _days_subtitle(365) == "陪 你 赚 了  1 年"
+
+
+def test_days_no_node():
+    assert _days_subtitle(1) is None
+    assert _days_subtitle(8) is None
+    assert _days_subtitle(31) is None
+    assert _days_subtitle(100) is None

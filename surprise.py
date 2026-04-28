@@ -125,6 +125,19 @@ def _holiday_subtitle(today: date) -> str | None:
     return None
 
 
+def _days_subtitle(days: int) -> str | None:
+    """spec §6：第 7 天 / 30 的倍数 / 365 的倍数。年优先于月。"""
+    if days <= 0:
+        return None
+    if days >= 365 and days % 365 == 0:
+        return f"陪 你 赚 了  {days // 365} 年"
+    if days >= 30 and days % 30 == 0:
+        return f"陪 你 赚 了  {days // 30} 个 月"
+    if days == 7:
+        return "陪 你 赚 了  1 周"
+    return None
+
+
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:
