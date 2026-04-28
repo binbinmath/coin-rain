@@ -28,6 +28,34 @@ DEFAULT_INCOME = 300
 DEFAULT_INTENSITY = "medium"
 DEFAULT_MODE = "single"
 DEFAULT_TIME = "17:00"
+
+
+# ============== 测试模式：Konami code 解锁 ==============
+# 序列：↑ ↑ ↓ ↓ ← → ← → A B
+KONAMI_CODE: tuple = (
+    Qt.Key_Up, Qt.Key_Up, Qt.Key_Down, Qt.Key_Down,
+    Qt.Key_Left, Qt.Key_Right, Qt.Key_Left, Qt.Key_Right,
+    Qt.Key_A, Qt.Key_B,
+)
+
+# 进程级标志：一旦在任意窗口解锁，新开的窗口默认显示"下一天"按钮
+_test_mode_unlocked = False
+
+
+def _konami_step(buf: list, key: int) -> tuple[list, bool]:
+    """纯函数：在已有 buffer 上吃一个键，返回 (新 buffer, 是否完成全套)。
+
+    完成后 buffer 重置为空。错位时如果当前键正好是序列首位，从这一位重启。
+    """
+    n = len(buf)
+    if n < len(KONAMI_CODE) and key == KONAMI_CODE[n]:
+        new_buf = buf + [key]
+        if len(new_buf) == len(KONAMI_CODE):
+            return [], True
+        return new_buf, False
+    if key == KONAMI_CODE[0]:
+        return [key], False
+    return [], False
 DEFAULT_TIMES = ["08:00", "13:00", "21:00"]
 MAX_TIMES = 6
 
@@ -393,10 +421,18 @@ class SetupWindow(QWidget):
 
         self._mode = (initial.mode if initial else DEFAULT_MODE)
         self._intensity = (initial.intensity if initial else DEFAULT_INTENSITY)
+        self._konami_buf: list = []
 
         self._build_ui(initial)
         self.setStyleSheet(_load_qss())
         self._refresh_quote()
+
+    def keyPressEvent(self, ev) -> None:
+        global _test_mode_unlocked
+        self._konami_buf, triggered = _konami_step(self._konami_buf, ev.key())
+        if triggered:
+            _test_mode_unlocked = True
+        super().keyPressEvent(ev)
 
     # ----- UI 构造 -----
 
@@ -785,6 +821,7 @@ class ManageWindow(QWidget):
         self.setWindowTitle("金 币 雨  ·  设 置 与 管 理")
         self.setFixedSize(WIN_W, WIN_H)
         self._cfg = Config.load()
+        self._konami_buf: list = []
         try:
             from scheduler import status as scheduler_status
             self._status = scheduler_status()
@@ -797,6 +834,18 @@ class ManageWindow(QWidget):
 
         self._build_ui()
         self.setStyleSheet(_load_qss())
+        # 隐藏的"下一天"测试按钮：未解锁时不显示
+        if hasattr(self, "advance_btn"):
+            self.advance_btn.setVisible(_test_mode_unlocked)
+
+    def keyPressEvent(self, ev) -> None:
+        global _test_mode_unlocked
+        self._konami_buf, triggered = _konami_step(self._konami_buf, ev.key())
+        if triggered:
+            _test_mode_unlocked = True
+            if hasattr(self, "advance_btn"):
+                self.advance_btn.setVisible(True)
+        super().keyPressEvent(ev)
 
     def _build_ui(self) -> None:
         # 也用左 hero + 右内容的同一种骨架，强化"同一份产品"

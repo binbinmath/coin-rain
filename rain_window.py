@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QPointF, QElapsedTimer, QRectF, Signal
-from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPen, QFont, QBrush, QPixmap
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPen, QFont, QBrush, QPixmap, QRadialGradient, QConicalGradient
 from PySide6.QtWidgets import QWidget
 
 from config import resource_path
@@ -90,6 +90,7 @@ class Coin:
     angle: float
     angular_v: float
     style_idx: int  # 0..len(COIN_FILES)-1
+    is_lucky: bool = False
 
 
 def _load_coin_pixmaps() -> list[QPixmap]:
@@ -222,24 +223,25 @@ class CoinRainWindow(QWidget):
     def _start_coins(self) -> None:
         # 切到金币下落音，覆盖之前的 slot 转动声
         self._play_coin()
-        # spec §8：幸运币（如果命中）—— 比最大币更大、慢、屏幕中上方掉下
+        # spec §8：幸运币（如果命中）—— 比最大币大很多、慢、带金光晕、屏幕中上方掉下
         if self._lucky_enabled and self._pixmaps and not self._lucky_spawned:
             self._lucky_spawned = True
-            d = COIN_DIAMETER_MAX * 1.8 * self._size_scale
+            d = COIN_DIAMETER_MAX * 2.5 * self._size_scale   # 大很多
             vy_lo, vy_hi = self._params["vy_init"]
             base_angle = random.uniform(0, math.tau)
             if self._flip_all:
                 base_angle += math.pi
             self.coins.append(Coin(
                 x=self._screen_w / 2 + random.uniform(-40, 40),
-                y=-120,
-                vx=random.uniform(-15, 15),
-                vy=random.uniform(vy_lo, vy_hi) * 0.7,   # 慢一点多停留
+                y=-d / 2,
+                vx=random.uniform(-10, 10),
+                vy=random.uniform(vy_lo, vy_hi) * 0.4,        # 慢很多
                 diameter=d,
                 angle=base_angle,
-                angular_v=random.uniform(ROT_SPEED_MIN, ROT_SPEED_MAX) * 0.6
+                angular_v=random.uniform(ROT_SPEED_MIN, ROT_SPEED_MAX) * 0.4
                           * random.choice((-1, 1)),
                 style_idx=random.randrange(len(self._pixmaps)),
+                is_lucky=True,
             ))
         self._spawn_batch()
 
@@ -358,6 +360,44 @@ class CoinRainWindow(QWidget):
         p.end()
 
     def _draw_coin(self, p: QPainter, c: Coin) -> None:
+        # 幸运币：先画一圈外溢的彩虹光晕（径向衰减），再画一圈旋转的彩虹环
+        if c.is_lucky:
+            # 外溢的柔光（淡彩，让光晕外延更自然）
+            soft_r = c.diameter * 1.15
+            soft = QRadialGradient(QPointF(c.x, c.y), soft_r)
+            soft.setColorAt(0.0, QColor(255, 255, 255, 0))
+            soft.setColorAt(0.55, QColor(255, 230, 180, 80))
+            soft.setColorAt(1.0, QColor(255, 200, 140, 0))
+            p.save()
+            p.setPen(Qt.NoPen)
+            p.setBrush(QBrush(soft))
+            p.drawEllipse(QPointF(c.x, c.y), soft_r, soft_r)
+            p.restore()
+
+            # 彩虹环：用 QConicalGradient 沿圆周变色，跟着金币 angle 缓慢旋转
+            ring_r = c.diameter * 0.78
+            ring_thickness = c.diameter * 0.22
+            cg = QConicalGradient(QPointF(c.x, c.y), -math.degrees(c.angle) * 0.7)
+            rainbow_stops = [
+                (0.000, QColor(255,  80,  80, 230)),  # 红
+                (0.143, QColor(255, 170,  60, 230)),  # 橙
+                (0.286, QColor(255, 240,  90, 230)),  # 黄
+                (0.429, QColor(120, 230, 120, 230)),  # 绿
+                (0.571, QColor( 80, 210, 255, 230)),  # 青
+                (0.714, QColor(120, 130, 255, 230)),  # 蓝
+                (0.857, QColor(220, 130, 255, 230)),  # 紫
+                (1.000, QColor(255,  80,  80, 230)),  # 闭合回红
+            ]
+            for stop, color in rainbow_stops:
+                cg.setColorAt(stop, color)
+            p.save()
+            pen = QPen(QBrush(cg), ring_thickness)
+            pen.setCapStyle(Qt.RoundCap)
+            p.setPen(pen)
+            p.setBrush(Qt.NoBrush)
+            p.drawEllipse(QPointF(c.x, c.y), ring_r, ring_r)
+            p.restore()
+
         # 阴影（椭圆）
         p.save()
         p.translate(c.x, c.y + c.diameter * 0.55)
@@ -448,18 +488,19 @@ class CoinRainWindow(QWidget):
         p.setPen(LABEL_COLOR)
         p.drawText(QPointF(lx, ly), text_main)
 
-        # spec §8：幸运币命中时，¥X 上方多一行小字
+        # spec §8：幸运币命中时，¥X 上方多一行小字（金光层叠）
         if self._lucky_enabled:
             tip = "✦   接  住  一  枚  幸  运  币   ✦"
-            tw = fm2.horizontalAdvance(tip)
+            tip_font = QFont(LABEL_FONT_FAMILY)
+            tip_font.setPixelSize(int(label_px * 1.2))   # 比副标稍大
+            tip_font.setWeight(QFont.Medium)
+            tip_font.setLetterSpacing(QFont.PercentageSpacing, 200)
+            p.setFont(tip_font)
+            fm3 = p.fontMetrics()
+            tw = fm3.horizontalAdvance(tip)
             tx = (w - tw) / 2
             ty = base_y - num_px * 0.85
-            p.save()
-            p.setPen(AMOUNT_SHADOW_COLOR)
-            p.drawText(QPointF(tx + 2, ty + 2), tip)
-            p.restore()
-            p.setPen(LABEL_COLOR)
-            p.drawText(QPointF(tx, ty), tip)
+            self._draw_text_layered(p, tx, ty, tip)
 
     # ---- slot-machine helpers ----
 
