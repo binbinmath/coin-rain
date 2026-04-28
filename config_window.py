@@ -28,34 +28,6 @@ DEFAULT_INCOME = 300
 DEFAULT_INTENSITY = "medium"
 DEFAULT_MODE = "single"
 DEFAULT_TIME = "17:00"
-
-
-# ============== 测试模式：Konami code 解锁 ==============
-# 序列：↑ ↑ ↓ ↓ ← → ← → A B
-KONAMI_CODE: tuple = (
-    Qt.Key_Up, Qt.Key_Up, Qt.Key_Down, Qt.Key_Down,
-    Qt.Key_Left, Qt.Key_Right, Qt.Key_Left, Qt.Key_Right,
-    Qt.Key_A, Qt.Key_B,
-)
-
-# 进程级标志：一旦在任意窗口解锁，新开的窗口默认显示"下一天"按钮
-_test_mode_unlocked = False
-
-
-def _konami_step(buf: list, key: int) -> tuple[list, bool]:
-    """纯函数：在已有 buffer 上吃一个键，返回 (新 buffer, 是否完成全套)。
-
-    完成后 buffer 重置为空。错位时如果当前键正好是序列首位，从这一位重启。
-    """
-    n = len(buf)
-    if n < len(KONAMI_CODE) and key == KONAMI_CODE[n]:
-        new_buf = buf + [key]
-        if len(new_buf) == len(KONAMI_CODE):
-            return [], True
-        return new_buf, False
-    if key == KONAMI_CODE[0]:
-        return [key], False
-    return [], False
 DEFAULT_TIMES = ["08:00", "13:00", "21:00"]
 MAX_TIMES = 6
 
@@ -148,34 +120,31 @@ def _validate_time(text: str) -> str | None:
 _active_rain_windows: list = []  # 占住引用，防止 CoinRainWindow 被 GC
 
 
-def _launch_test_rain(day_offset: int = 0, force_income: int | None = None) -> None:
+def _launch_test_rain() -> None:
     """同进程内开一个 CoinRainWindow 预览动画（不再 spawn 子进程）。
 
     子进程版会让 winsound 在某些 Windows 音频路由下静音；同进程跑就和命令行
     `coin_rain --rain --test` 完全等价，音效路径一致。
-
-    - day_offset: "今天" 虚拟成真实日期 + 这个偏移，用来预览未来几天的金币雨
-    - force_income: 强制覆盖日收入（"下一天"测试按钮锁死 ¥400 用）
     """
-    from datetime import date, datetime, timedelta
+    from datetime import date, datetime
     from rain_window import CoinRainWindow, _compute_amount, _load_coin_pixmaps
     import surprise
 
     cfg = Config.load()
-    income = force_income if force_income is not None else (cfg.income if cfg else 300)
+    income = cfg.income if cfg else 300
     intensity = cfg.intensity if cfg else "medium"
     installed_at = cfg.installed_at if cfg else ""
     amount = _compute_amount(income=income, nth=1, total=1)
 
-    today = date.today() + timedelta(days=day_offset)
+    today = date.today()
     if installed_at:
         try:
             d0 = datetime.fromisoformat(installed_at).date()
             days = max((today - d0).days + 1, 1)
         except ValueError:
-            days = max(1 + day_offset, 1)
+            days = 1
     else:
-        days = max(1 + day_offset, 1)
+        days = 1
 
     w = CoinRainWindow()
     w.set_amount(amount, "今 日 到 账")
@@ -421,18 +390,10 @@ class SetupWindow(QWidget):
 
         self._mode = (initial.mode if initial else DEFAULT_MODE)
         self._intensity = (initial.intensity if initial else DEFAULT_INTENSITY)
-        self._konami_buf: list = []
 
         self._build_ui(initial)
         self.setStyleSheet(_load_qss())
         self._refresh_quote()
-
-    def keyPressEvent(self, ev) -> None:
-        global _test_mode_unlocked
-        self._konami_buf, triggered = _konami_step(self._konami_buf, ev.key())
-        if triggered:
-            _test_mode_unlocked = True
-        super().keyPressEvent(ev)
 
     # ----- UI 构造 -----
 
@@ -821,7 +782,6 @@ class ManageWindow(QWidget):
         self.setWindowTitle("金 币 雨  ·  设 置 与 管 理")
         self.setFixedSize(WIN_W, WIN_H)
         self._cfg = Config.load()
-        self._konami_buf: list = []
         try:
             from scheduler import status as scheduler_status
             self._status = scheduler_status()
@@ -834,18 +794,6 @@ class ManageWindow(QWidget):
 
         self._build_ui()
         self.setStyleSheet(_load_qss())
-        # 隐藏的"下一天"测试按钮：未解锁时不显示
-        if hasattr(self, "advance_btn"):
-            self.advance_btn.setVisible(_test_mode_unlocked)
-
-    def keyPressEvent(self, ev) -> None:
-        global _test_mode_unlocked
-        self._konami_buf, triggered = _konami_step(self._konami_buf, ev.key())
-        if triggered:
-            _test_mode_unlocked = True
-            if hasattr(self, "advance_btn"):
-                self.advance_btn.setVisible(True)
-        super().keyPressEvent(ev)
 
     def _build_ui(self) -> None:
         # 也用左 hero + 右内容的同一种骨架，强化"同一份产品"
@@ -1013,11 +961,6 @@ class ManageWindow(QWidget):
         self.test_btn = QPushButton("先  试")
         self.test_btn.setObjectName("btn_secondary")
         self.test_btn.setCursor(Qt.PointingHandCursor)
-        self.advance_btn = QPushButton("下  一  天")
-        self.advance_btn.setObjectName("btn_secondary")
-        self.advance_btn.setCursor(Qt.PointingHandCursor)
-        self.advance_btn.setToolTip("锁定 ¥400/天 + 单次触发，每点一次模拟过一天，看后面节日和里程碑效果")
-        self._test_day_offset = 0
         self.edit_btn = QPushButton("修  改  配  置")
         self.edit_btn.setObjectName("btn_secondary")
         self.edit_btn.setCursor(Qt.PointingHandCursor)
@@ -1026,14 +969,12 @@ class ManageWindow(QWidget):
         self.close_btn.setCursor(Qt.PointingHandCursor)
         foot.addWidget(self.coffee_btn)
         foot.addWidget(self.test_btn)
-        foot.addWidget(self.advance_btn)
         foot.addWidget(self.edit_btn)
         foot.addWidget(self.close_btn)
         v.addLayout(foot)
 
         # wire
-        self.test_btn.clicked.connect(lambda: _launch_test_rain())
-        self.advance_btn.clicked.connect(self._on_advance_day)
+        self.test_btn.clicked.connect(_launch_test_rain)
         self.edit_btn.clicked.connect(self._on_edit)
         self.close_btn.clicked.connect(self.close)
         self.toggle_on.clicked.connect(lambda: self._set_enabled(True))
@@ -1164,12 +1105,3 @@ class ManageWindow(QWidget):
         self._setup = SetupWindow(initial=self._cfg)
         self._setup.show()
         self.close()
-
-    def _on_advance_day(self) -> None:
-        """模拟"过一天"测试按钮：累加 day_offset，锁定 ¥400/天单次触发，看节日 / 里程碑。"""
-        from datetime import date, timedelta
-        self._test_day_offset += 1
-        sim_date = date.today() + timedelta(days=self._test_day_offset)
-        # 按钮文本反映当前模拟到第几天 + 模拟日期
-        self.advance_btn.setText(f"下  一  天 +{self._test_day_offset} · {sim_date.strftime('%m-%d')}")
-        _launch_test_rain(day_offset=self._test_day_offset, force_income=400)
