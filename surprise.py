@@ -215,7 +215,27 @@ def _default_caption(*, today: date, rng: random.Random) -> str:
 def compute_subtitle(*, days_since_install: int, today: date,
                      daily_income: int, is_last_trigger: bool,
                      rng: random.Random | None = None) -> str:
-    raise NotImplementedError
+    """spec §3 优先级引擎：累计 → 节日 → 天数 → 隐藏 → 默认池。"""
+    rng = rng or random.Random()
+    # 优先级 1：累计金额节点（仅最后一次触发）
+    if is_last_trigger:
+        node = _cumulative_node_amount(days=days_since_install, income=daily_income)
+        if node is not None:
+            return f"累 计 突 破   ¥{node:,}"
+    # 优先级 2：节日
+    h = _holiday_subtitle(today)
+    if h is not None:
+        return h
+    # 优先级 3：天数
+    d = _days_subtitle(days_since_install)
+    if d is not None:
+        return d
+    # 优先级 4：隐藏日期彩蛋
+    e = _easter_subtitle(today)
+    if e is not None:
+        return e
+    # 优先级 5：默认池
+    return _default_caption(today=today, rng=rng)
 
 
 def compute_visual_overrides(*, today: date) -> dict:

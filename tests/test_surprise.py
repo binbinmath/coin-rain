@@ -9,6 +9,7 @@ from surprise import (
     _easter_subtitle,
     _default_caption,
     DEFAULT_CAPTIONS,
+    compute_subtitle,
     compute_visual_overrides,
 )
 
@@ -184,3 +185,86 @@ def test_default_caption_no_friday_countdown_on_weekend():
     for seed in range(500):
         c = _default_caption(today=date(2026, 5, 9), rng=random.Random(seed))  # 周六
         assert "周 五 倒 计 时" not in c
+
+
+def test_subtitle_priority_cumulative_beats_holiday():
+    # 50 天 + I=200 命中累计 ¥10000；今天又是国庆 → 累计赢
+    out = compute_subtitle(
+        days_since_install=50,
+        today=date(2026, 10, 1),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "累 计 突 破" in out
+    assert "10,000" in out
+
+
+def test_subtitle_holiday_beats_days():
+    # 国庆当天 + 第 30 天：节日赢（累计未命中：30*200=6000 < 10000）
+    out = compute_subtitle(
+        days_since_install=30,
+        today=date(2026, 10, 1),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "国 庆" in out
+
+
+def test_subtitle_days_beats_easter():
+    # 11/11 + 第 30 天：天数赢
+    out = compute_subtitle(
+        days_since_install=30,
+        today=date(2026, 11, 11),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "1 个 月" in out
+
+
+def test_subtitle_easter_when_no_milestone():
+    # 4/1 + 平凡天数：愚人节
+    out = compute_subtitle(
+        days_since_install=33,
+        today=date(2026, 4, 1),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "愚 人 节" in out
+
+
+def test_subtitle_default_pool_fallback():
+    # 平凡日子 → 从默认池抽
+    out = compute_subtitle(
+        days_since_install=11,
+        today=date(2026, 5, 5),
+        daily_income=200,
+        is_last_trigger=True,
+        rng=random.Random(0),
+    )
+    # 应该是默认池里的某句（可能是周五倒计时模板填后的）
+    pool_no_friday = [c for c in DEFAULT_CAPTIONS if "周 五 倒 计 时" not in c]
+    valid = pool_no_friday + ["今 天 就 是 周 五"]
+    # 周五倒计时模板填了天数，无法直接 in DEFAULT_CAPTIONS，但带 "周 五 倒 计 时" 子串就接受
+    assert out in valid or "周 五 倒 计 时" in out
+
+
+def test_subtitle_cumulative_only_on_last_trigger():
+    # is_last_trigger=False → 累计节点不命中，回退到下一级
+    out = compute_subtitle(
+        days_since_install=50,
+        today=date(2026, 6, 3),  # 平凡日
+        daily_income=200,
+        is_last_trigger=False,
+        rng=random.Random(0),
+    )
+    assert "累 计 突 破" not in out
+
+
+def test_subtitle_amount_thousand_separator():
+    out = compute_subtitle(
+        days_since_install=50,
+        today=date(2026, 6, 3),
+        daily_income=200,
+        is_last_trigger=True,
+    )
+    assert "¥10,000" in out
