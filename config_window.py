@@ -385,7 +385,7 @@ class _TimesChipsWidget(QWidget):
 class SetupWindow(QWidget):
     def __init__(self, initial: Config | None = None) -> None:
         super().__init__()
-        self.setWindowTitle("鎏 金 时 分  ·  Golden Hour")
+        self.setWindowTitle("金 币 雨  ·  Coin Rain")
         self.setFixedSize(WIN_W, WIN_H)
 
         self._mode = (initial.mode if initial else DEFAULT_MODE)
@@ -441,9 +441,9 @@ class SetupWindow(QWidget):
         brand_box.setSpacing(6)
         eyebrow = QLabel("A  D A I L Y   R I T U A L  ·  №   0 0 1")
         eyebrow.setObjectName("brand_eyebrow")
-        brand = QLabel("Golden Hour")
+        brand = QLabel("Coin Rain")
         brand.setObjectName("brand_en")
-        brand_cn = QLabel("鎏  金  时  分")
+        brand_cn = QLabel("金  币  雨")
         brand_cn.setObjectName("brand_cn")
         brand_box.addWidget(eyebrow)
         brand_box.addWidget(brand)
@@ -779,7 +779,7 @@ class SetupWindow(QWidget):
 class ManageWindow(QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("鎏 金 时 分  ·  设 置 与 管 理")
+        self.setWindowTitle("金 币 雨  ·  设 置 与 管 理")
         self.setFixedSize(WIN_W, WIN_H)
         self._cfg = Config.load()
         try:
@@ -835,9 +835,9 @@ class ManageWindow(QWidget):
 
         eyebrow = QLabel(self._installed_str())
         eyebrow.setObjectName("brand_eyebrow")
-        brand = QLabel("Golden Hour")
+        brand = QLabel("Coin Rain")
         brand.setObjectName("brand_en")
-        brand_cn = QLabel("鎏  金  时  分")
+        brand_cn = QLabel("金  币  雨")
         brand_cn.setObjectName("brand_cn")
         v.addWidget(eyebrow)
         v.addSpacing(6)

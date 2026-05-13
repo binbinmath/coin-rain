@@ -1,4 +1,4 @@
-"""鎏金时分入口 —— 解析 argv，派发到动画 / 配置 UI / 管理 UI。"""
+"""金币雨入口 —— 解析 argv，派发到动画 / 配置 UI / 管理 UI。"""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,7 @@ import sys
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Golden Hour")
+    p = argparse.ArgumentParser(description="Coin Rain")
     p.add_argument("--rain", action="store_true", help="进入动画模式（任务计划触发用）")
     p.add_argument("--test", action="store_true", help="测试模式（配合 --rain）")
     p.add_argument("--nth", type=int, default=1, help="多次模式中这是第几次（1-based）")

@@ -1,4 +1,4 @@
-"""鎏金时分主窗口（CoinRainWindow）+ 相关纯逻辑。
+"""金币雨主窗口（CoinRainWindow）+ 相关纯逻辑。
 
 V2 升级：
 - 6 张真实金币 PNG 随机混合下落（assets/coins/*.png）
@@ -106,7 +106,7 @@ def _load_coin_pixmaps() -> list[QPixmap]:
 
 
 class CoinRainWindow(QWidget):
-    """全屏透明 + 置顶 + 鼠标穿透的鎏金时分动画窗口。
+    """全屏透明 + 置顶 + 鼠标穿透的金币雨动画窗口。
 
     完整跑完一次会 emit `finished`，同时 self.close() —— 父进程／父窗口决定要不要退出 app。
     """
