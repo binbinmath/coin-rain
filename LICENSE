@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2026 binbinmath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+第三方资源 / Third-party assets
+
+字体：
+- Fraunces      — SIL Open Font License 1.1（Undercase Type）
+- Noto Serif SC — SIL Open Font License 1.1（Google / Adobe）
+
+音效：
+- assets/coin_drop.wav 由 OpenGameArt 上 12 段 CC0 金币录音混合生成
+  （详见 scripts/gen_coin_drop.py）
+- assets/slot_spin.wav 代码合成（详见 scripts/gen_slot_spin.py）
+
+金币 PNG：
+- 由项目脚本基于公开材料合成（详见 scripts/compose_coins.py /
+  scripts/extract_fine999.py），仅作示意用途

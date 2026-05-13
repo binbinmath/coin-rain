@@ -5,7 +5,8 @@
 - enable() / disable(): 启/停所有相关任务
 - status(): 查询任务是否存在、是否启用、下次触发时间
 - unregister(): 清掉全部相关任务
-- _distribute_times(): 纯函数，多次模式均匀分布时间点
+
+V2 起：多次模式直接读 cfg.times，不再做自动均分。
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from config import Config
 
 
 TASK_NAME_BASE = "CoinRainDaily"
+MULTI_TASK_LIMIT = 12  # unregister 时清理候选数量上限
 
 
 class SchedulerError(RuntimeError):
@@ -32,34 +34,11 @@ class TaskStatus:
     next_run: datetime | None
 
 
-# ---------- 纯函数 ----------
-
-def _distribute_times(first: str, last: str, count: int) -> list[str]:
-    """在 [first, last] 区间上均匀分布 count 个时间点（首尾含）。
-
-    - first/last 格式 "HH:MM"
-    - count >= 2
-    - 分钟向最近整数四舍五入
-    """
-    fh, fm = map(int, first.split(":"))
-    lh, lm = map(int, last.split(":"))
-    first_min = fh * 60 + fm
-    last_min = lh * 60 + lm
-    total_diff = last_min - first_min
-    step = total_diff / (count - 1)
-    result = []
-    for i in range(count):
-        m = first_min + round(step * i)
-        h, mm = divmod(m, 60)
-        result.append(f"{h:02d}:{mm:02d}")
-    return result
-
-
-def _task_names(mode: str, count: int | None) -> list[str]:
-    """多次模式返回 N 个任务名；单次返回 1 个。"""
-    if mode == "single":
+def _task_names(cfg: Config) -> list[str]:
+    """单次模式 1 个，多次模式 N 个。"""
+    if cfg.mode == "single":
         return [TASK_NAME_BASE]
-    return [f"{TASK_NAME_BASE}_{i}" for i in range(1, (count or 1) + 1)]
+    return [f"{TASK_NAME_BASE}_{i}" for i in range(1, len(cfg.times) + 1)]
 
 
 # ---------- subprocess 封装 ----------
@@ -87,10 +66,9 @@ def status() -> TaskStatus:
     """查询任务状态。"""
     cfg = Config.load()
     if cfg is None:
-        # 无 config 时尝试查基础任务名
         return _single_task_status(TASK_NAME_BASE)
 
-    names = _task_names(cfg.mode, cfg.count)
+    names = _task_names(cfg)
     any_exists = False
     all_enabled = True
     earliest: datetime | None = None
@@ -115,7 +93,6 @@ def _single_task_status(name: str) -> TaskStatus:
     for line in r.stdout.splitlines():
         s = line.strip()
         sl = s.lower()
-        # 英文与中文都尝试
         if sl.startswith("scheduled task state") or s.startswith("任务状态"):
             if "disabled" in sl or "已禁用" in s:
                 enabled = False
@@ -138,7 +115,7 @@ def enable() -> None:
     cfg = Config.load()
     if cfg is None:
         return
-    for name in _task_names(cfg.mode, cfg.count):
+    for name in _task_names(cfg):
         r = _run(["schtasks.exe", "/Change", "/TN", name, "/ENABLE"])
         if r.returncode != 0 and not _is_not_found(r):
             raise SchedulerError(r.stderr or r.stdout)
@@ -148,15 +125,15 @@ def disable() -> None:
     cfg = Config.load()
     if cfg is None:
         return
-    for name in _task_names(cfg.mode, cfg.count):
+    for name in _task_names(cfg):
         r = _run(["schtasks.exe", "/Change", "/TN", name, "/DISABLE"])
         if r.returncode != 0 and not _is_not_found(r):
             raise SchedulerError(r.stderr or r.stdout)
 
 
 def unregister() -> None:
-    """删除所有可能的任务名（base + base_1..12）。"""
-    candidates = [TASK_NAME_BASE] + [f"{TASK_NAME_BASE}_{i}" for i in range(1, 13)]
+    """删除所有可能的任务名（base + base_1..MULTI_TASK_LIMIT）。"""
+    candidates = [TASK_NAME_BASE] + [f"{TASK_NAME_BASE}_{i}" for i in range(1, MULTI_TASK_LIMIT + 1)]
     for name in candidates:
         _run(["schtasks.exe", "/Delete", "/F", "/TN", name])  # 忽略失败
 
@@ -166,11 +143,15 @@ def register(cfg: Config) -> None:
     unregister()
     exe = _exe_path()
     if cfg.mode == "single":
+        if not cfg.time:
+            raise SchedulerError("单次模式缺少时间")
         _register_one(TASK_NAME_BASE, exe, cfg.time, nth=1, total=1)
     else:
-        times = _distribute_times(cfg.first_time, cfg.last_time, cfg.count)
-        for i, t in enumerate(times, start=1):
-            _register_one(f"{TASK_NAME_BASE}_{i}", exe, t, nth=i, total=cfg.count)
+        if not cfg.times:
+            raise SchedulerError("多次模式至少需要一个时刻")
+        total = len(cfg.times)
+        for i, t in enumerate(cfg.times, start=1):
+            _register_one(f"{TASK_NAME_BASE}_{i}", exe, t, nth=i, total=total)
 
 
 def _register_one(name: str, exe: str, time: str, nth: int, total: int) -> None:

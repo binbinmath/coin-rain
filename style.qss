@@ -1,274 +1,435 @@
-/* editorial 米白金 · Setup & Manage 共用 */
+/* 墨黑金 · Lacquer Gold —— Coin Rain V2 视觉
+ * 由 claude design 交付（FINAL_SetupWindow_spec.html）
+ * SetupWindow + ManageWindow 共用
+ */
 
 QWidget {
-    background-color: #faf3e4;
-    color: #241810;
-    font-family: "Noto Serif SC", serif;
-    font-size: 14px;
-}
-
-/* Header */
-QLabel#brand {
-    font-family: "Fraunces", "Noto Serif SC", serif;
-    font-size: 30px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    color: #241810;
-}
-QLabel#eyebrow {
-    font-family: "Fraunces", serif;
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: #8a6830;
-}
-
-/* Field headings */
-QLabel#field_num {
-    font-family: "Fraunces", serif;
-    font-size: 20px;
-    color: #b8925a;
-    font-style: italic;
-}
-QLabel#field_label {
+    background-color: #16110c;
+    color: #f5e9c8;
     font-family: "Noto Serif SC", serif;
     font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    color: #241810;
-    padding-left: 10px;
-}
-QLabel#field_suffix {
-    font-family: "Noto Serif SC", serif;
-    font-size: 12px;
-    color: #6b5339;
-    letter-spacing: 2px;
 }
 
-/* Income row */
+/* ============== SetupWindow / ManageWindow 通用 ============== */
+
+QWidget#hero_pane {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #1a1208, stop:1 #0e0a05);
+    border-right: 1px solid rgba(212, 168, 74, 0.22);
+}
+
+QWidget#right_pane {
+    background: transparent;
+}
+
+/* ---- 左侧 brand ---- */
+QLabel#brand_eyebrow {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 10px;
+    color: #a07820;
+    background: transparent;
+}
+QLabel#brand_en {
+    font-family: "Fraunces", serif;
+    font-size: 30px;
+    font-weight: 500;
+    color: #fff4cc;
+    background: transparent;
+}
+QLabel#brand_cn {
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #d4a84a;
+    background: transparent;
+}
+
+/* ---- 左侧 dynamic quote ---- */
+QLabel#quote_cn {
+    font-family: "Noto Serif SC", serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff4cc;
+    background: transparent;
+}
+QLabel#quote_en {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 12px;
+    color: #b09870;
+    background: transparent;
+}
+QLabel#quote_foot {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 10px;
+    color: #a07820;
+    background: transparent;
+}
+/* hero 底部的小链接：正体加粗，比 quote_foot 亮一档；与 foot 留出明显距离 */
+QLabel#about_link {
+    font-family: "Noto Serif SC", serif;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    padding-top: 18px;
+}
+
+/* 赞赏码弹窗里的核心链接：居中、加大、加粗、暖白 + 金色下划线 */
+QLabel#about_link_prominent {
+    font-family: "Noto Serif SC", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff4cc;
+    background: transparent;
+    padding: 6px 0 4px 0;
+}
+
+/* hero coin 浮在右下，QLabel 显示 pixmap */
+QLabel#hero_coin {
+    background: transparent;
+}
+
+/* ---- 右侧标题 ---- */
+QLabel#right_eyebrow {
+    font-family: "Fraunces", serif;
+    font-size: 10px;
+    color: #d4a84a;
+    background: transparent;
+}
+QLabel#right_title {
+    font-family: "Fraunces", serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: #fff4cc;
+    background: transparent;
+}
+QLabel#right_title_accent {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 22px;
+    color: #d4a84a;
+    background: transparent;
+}
+QLabel#right_sub {
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    color: #8a7350;
+    background: transparent;
+}
+
+/* ---- 字段头：序号 + 标签 ---- */
+QLabel#lab_num {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 14px;
+    color: #d4a84a;
+    background: transparent;
+}
+QLabel#lab_cn {
+    font-family: "Noto Serif SC", serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #f5e9c8;
+    background: transparent;
+}
+QLabel#lab_suffix {
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    color: #8a7350;
+    background: transparent;
+}
+
+/* ---- 收入输入 ---- */
 QLabel#income_prefix {
     font-family: "Fraunces", serif;
-    font-size: 26px;
-    color: #b8925a;
+    font-size: 20px;
+    color: #d4a84a;
+    background: transparent;
 }
 QLineEdit#income_input {
     font-family: "Fraunces", serif;
-    font-size: 38px;
-    color: #241810;
+    font-size: 28px;
+    color: #fff4cc;
     background: transparent;
     border: none;
-    border-bottom: 1px solid #d8c9a8;
-    padding: 2px 4px;
+    border-bottom: 1px solid rgba(212, 168, 74, 0.32);
+    padding: 4px 2px 6px 2px;
+    selection-background-color: rgba(212, 168, 74, 0.45);
+    selection-color: #16110c;
 }
 QLineEdit#income_input:focus {
-    border-bottom: 1px solid #b8925a;
+    border-bottom: 1px solid #d4a84a;
+}
+QLineEdit#income_input[invalid="true"] {
+    border-bottom: 1px solid #cd6644;
+    color: #cd6644;
 }
 
-/* Tiles (intensity + mode) */
+/* ---- 时刻 QTimeEdit ---- */
+QTimeEdit#time_input {
+    font-family: "Fraunces", serif;
+    font-size: 26px;
+    color: #fff4cc;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(212, 168, 74, 0.32);
+    padding: 4px 2px 6px 2px;
+    selection-background-color: rgba(212, 168, 74, 0.45);
+    selection-color: #16110c;
+}
+QTimeEdit#time_input:focus {
+    border-bottom: 1px solid #d4a84a;
+}
+QTimeEdit::up-button, QTimeEdit::down-button {
+    subcontrol-origin: border;
+    width: 16px;
+    background: rgba(212, 168, 74, 0.10);
+    border: none;
+    border-left: 1px solid rgba(212, 168, 74, 0.22);
+}
+QTimeEdit::up-button { subcontrol-position: top right; }
+QTimeEdit::down-button { subcontrol-position: bottom right; }
+QTimeEdit::up-button:hover, QTimeEdit::down-button:hover {
+    background: rgba(212, 168, 74, 0.28);
+}
+QTimeEdit::up-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid #d4a84a;
+}
+QTimeEdit::down-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #d4a84a;
+}
+
+/* ---- Tile ---- */
 QPushButton#tile {
-    background: rgba(255, 252, 243, 0.5);
-    border: 1px solid #d8c9a8;
-    color: #241810;
-    padding: 12px 8px;
+    background: rgba(247, 230, 184, 0.04);
+    border: 1px solid rgba(212, 168, 74, 0.28);
+    color: #f5e9c8;
     font-family: "Noto Serif SC", serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    min-height: 52px;
+    font-size: 11px;
+    padding: 9px 4px;
+    min-height: 28px;
 }
 QPushButton#tile:hover {
-    border: 1px solid #d4b67a;
-    background: rgba(255, 252, 243, 1);
+    border-color: rgba(212, 168, 74, 0.70);
+    background: rgba(247, 230, 184, 0.08);
+    color: #fff4cc;
 }
 QPushButton#tile:checked {
-    border: 1px solid #b8925a;
+    border: 1px solid #d4a84a;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgba(212,182,122,0.16), stop:1 rgba(184,146,90,0.06));
-    color: #8a6830;
+        stop:0 rgba(247, 221, 140, 0.18),
+        stop:1 rgba(184, 146, 90, 0.06));
+    color: #fff4cc;
     font-weight: 500;
 }
 
-/* Time input (QTimeEdit + QSpinBox 共享编辑风) */
-QTimeEdit#time_input,
-QTimeEdit#time_input_small,
-QSpinBox#count_input {
+/* ---- 多次模式 chip ---- */
+QPushButton#chip {
+    background: rgba(212, 168, 74, 0.08);
+    border: 1px solid rgba(212, 168, 74, 0.40);
+    color: #f7dd8c;
     font-family: "Fraunces", serif;
-    color: #241810;
-    background: rgba(255, 252, 243, 0.6);
-    border: 1px solid #d8c9a8;
-    border-radius: 2px;
-    padding: 4px 8px;
-    selection-background-color: rgba(184, 146, 90, 0.35);
-    selection-color: #241810;
+    font-size: 13px;
+    padding: 4px 10px;
+    min-height: 22px;
 }
-QTimeEdit#time_input {
-    font-size: 30px;
+QPushButton#chip:hover {
+    background: rgba(212, 168, 74, 0.18);
+    border-color: #d4a84a;
+    color: #fff4cc;
 }
-QTimeEdit#time_input_small {
-    font-size: 22px;
+QPushButton#chip_add {
+    background: transparent;
+    border: 1px dashed rgba(212, 168, 74, 0.40);
+    color: #a07820;
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    padding: 4px 12px;
+    min-height: 22px;
 }
-QSpinBox#count_input {
-    font-size: 22px;
-    qproperty-alignment: AlignCenter;
-}
-QTimeEdit#time_input:focus,
-QTimeEdit#time_input_small:focus,
-QSpinBox#count_input:focus {
-    border: 1px solid #b8925a;
-    background: rgba(255, 252, 243, 1.0);
-}
-QTimeEdit::up-button,
-QTimeEdit::down-button,
-QSpinBox::up-button,
-QSpinBox::down-button {
-    subcontrol-origin: border;
-    width: 20px;
-    background: rgba(184, 146, 90, 0.10);
-    border: none;
-    border-left: 1px solid #d8c9a8;
-}
-QTimeEdit::up-button, QSpinBox::up-button { subcontrol-position: top right; }
-QTimeEdit::down-button, QSpinBox::down-button { subcontrol-position: bottom right; }
-QTimeEdit::up-button:hover,
-QTimeEdit::down-button:hover,
-QSpinBox::up-button:hover,
-QSpinBox::down-button:hover {
-    background: rgba(184, 146, 90, 0.28);
-}
-QTimeEdit::up-arrow, QSpinBox::up-arrow {
-    width: 0; height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 6px solid #8a6830;
-    margin-bottom: 1px;
-}
-QTimeEdit::down-arrow, QSpinBox::down-arrow {
-    width: 0; height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 6px solid #8a6830;
-    margin-top: 1px;
-}
-QLabel#time_hint {
-    font-family: "Fraunces", serif;
-    font-style: italic;
-    font-size: 12px;
-    color: #6b5339;
+QPushButton#chip_add:hover {
+    border-color: #d4a84a;
+    color: #d4a84a;
+    background: rgba(212, 168, 74, 0.06);
 }
 
-/* Separator */
+/* ---- 分隔线 ---- */
 QFrame#hrule {
-    color: rgba(216, 201, 168, 0.6);
-    background: rgba(216, 201, 168, 0.6);
+    color: rgba(212, 168, 74, 0.20);
+    background: rgba(212, 168, 74, 0.20);
     max-height: 1px;
+    border: none;
 }
 
-/* Note */
+/* ---- footer ---- */
 QLabel#note {
     font-family: "Fraunces", serif;
     font-style: italic;
     font-size: 11px;
-    color: #a08c6c;
-    letter-spacing: 1px;
+    color: #6b5a3c;
+    background: transparent;
 }
 
-/* Buttons */
 QPushButton#btn_secondary {
     background: transparent;
-    border: 1px solid #b8925a;
-    color: #8a6830;
+    border: 1px solid #d4a84a;
+    color: #f7dd8c;
     font-family: "Noto Serif SC", serif;
-    font-size: 13px;
-    letter-spacing: 3px;
-    padding: 10px 24px;
-    font-weight: 500;
+    font-size: 12px;
+    padding: 8px 18px;
 }
 QPushButton#btn_secondary:hover {
-    background: rgba(184, 146, 90, 0.08);
+    background: rgba(212, 168, 74, 0.12);
+    color: #fff4cc;
 }
+
 QPushButton#btn_primary {
-    background: #241810;
-    color: #faf3e4;
-    border: 1px solid #241810;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #f7dd8c, stop:1 #d4a84a);
+    color: #16110c;
+    border: 1px solid #a07820;
     font-family: "Noto Serif SC", serif;
-    font-size: 13px;
-    letter-spacing: 3px;
-    padding: 10px 26px;
+    font-size: 12px;
     font-weight: 500;
+    padding: 8px 22px;
 }
 QPushButton#btn_primary:hover {
-    background: #8a6830;
-    border: 1px solid #8a6830;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #fff0a8, stop:1 #e7be62);
+}
+QPushButton#btn_primary:disabled {
+    background: rgba(212, 168, 74, 0.18);
+    color: #6b5a3c;
+    border: 1px solid rgba(212, 168, 74, 0.20);
 }
 
-/* Validation error */
-QLineEdit[invalid="true"] {
-    border-bottom: 1px solid #a83e2e;
+/* 请喝咖啡按钮 —— 比 secondary 更柔的"邀请态"。padding 偏宽给 emoji 渲染留余地 */
+QPushButton#btn_coffee {
+    background: transparent;
+    border: 1px solid rgba(212, 168, 74, 0.40);
+    color: #b09870;
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    padding: 8px 22px;
+}
+QPushButton#btn_coffee:hover {
+    border-color: #d4a84a;
+    color: #f7dd8c;
+    background: rgba(212, 168, 74, 0.10);
 }
 
-/* ManageWindow */
+/* 赞赏码图（弹窗里） */
+QLabel#coffee_image {
+    background: transparent;
+}
+
+/* ============== ManageWindow 专属 ============== */
+
 QWidget#summary_card {
-    background: rgba(255, 252, 243, 0.5);
-    border: 1px solid #d8c9a8;
+    background: rgba(247, 230, 184, 0.04);
+    border: 1px solid rgba(212, 168, 74, 0.22);
 }
 QLabel#cell_k {
     font-family: "Noto Serif SC", serif;
     font-size: 10px;
-    color: #8a6830;
-    letter-spacing: 4px;
+    color: #d4a84a;
+    background: transparent;
 }
 QLabel#cell_v {
     font-family: "Fraunces", serif;
-    font-size: 28px;
-    color: #241810;
-    letter-spacing: 1px;
+    font-size: 26px;
+    color: #fff4cc;
+    background: transparent;
 }
 QLabel#cell_sub {
     font-family: "Fraunces", serif;
     font-style: italic;
     font-size: 11px;
-    color: #a08c6c;
-    letter-spacing: 1px;
+    color: #8a7350;
+    background: transparent;
 }
 QWidget#schedule_strip {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgba(212,182,122,0.12), stop:1 rgba(184,146,90,0.04));
-    border: 1px solid #b8925a;
+        stop:0 rgba(247, 221, 140, 0.10),
+        stop:1 rgba(184, 146, 90, 0.04));
+    border: 1px solid rgba(212, 168, 74, 0.30);
 }
 QLabel#strip_label {
     font-family: "Noto Serif SC", serif;
     font-size: 11px;
-    color: #8a6830;
-    letter-spacing: 4px;
+    color: #d4a84a;
+    background: transparent;
 }
 QLabel#strip_next {
     font-family: "Fraunces", serif;
     font-size: 20px;
-    color: #241810;
+    color: #fff4cc;
+    background: transparent;
 }
 QLabel#strip_remain {
     font-family: "Fraunces", serif;
     font-style: italic;
     font-size: 13px;
-    color: #6b5339;
+    color: #b09870;
+    background: transparent;
 }
+
 QPushButton#toggle_on {
-    background: #241810;
-    color: #faf3e4;
-    border: 1px solid #b8925a;
-    padding: 8px 20px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #f7dd8c, stop:1 #d4a84a);
+    color: #16110c;
+    border: 1px solid #a07820;
     font-family: "Noto Serif SC", serif;
-    letter-spacing: 3px;
+    padding: 7px 18px;
 }
 QPushButton#toggle_off {
-    background: rgba(255,252,243,0.5);
-    color: #6b5339;
-    border: 1px solid #b8925a;
-    padding: 8px 20px;
+    background: transparent;
+    color: #8a7350;
+    border: 1px solid rgba(212, 168, 74, 0.40);
     font-family: "Noto Serif SC", serif;
-    letter-spacing: 3px;
+    padding: 7px 18px;
 }
+QPushButton#toggle_on:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #fff0a8, stop:1 #e7be62);
+}
+QPushButton#toggle_off:hover {
+    background: rgba(212, 168, 74, 0.10);
+    color: #f5e9c8;
+}
+
 QLabel#tag_line {
     font-family: "Fraunces", serif;
     font-style: italic;
     font-size: 12px;
-    color: #6b5339;
+    color: #b09870;
+    background: transparent;
+}
+
+/* ============== QMessageBox（保持深色） ============== */
+QMessageBox {
+    background-color: #1a1208;
+    color: #f5e9c8;
+}
+QMessageBox QLabel {
+    color: #f5e9c8;
+    background: transparent;
+}
+QMessageBox QPushButton {
+    background: transparent;
+    border: 1px solid #d4a84a;
+    color: #f7dd8c;
+    padding: 6px 16px;
+    min-width: 60px;
+}
+QMessageBox QPushButton:hover {
+    background: rgba(212, 168, 74, 0.12);
 }

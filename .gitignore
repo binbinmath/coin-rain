@@ -15,3 +15,17 @@ dist/
 # 本地 IDE
 .vscode/
 .idea/
+
+# Claude Code 本地配置 / 记忆
+.claude/
+
+# 个人内容（不进开源仓库）
+公众号文章/
+/赞赏码.jpg
+/coin_e.png
+data/
+
+# 设计探索阶段的中间产物
+Coin Rain/
+claude_design_handoff/
+upload_to_claude_design/
