@@ -24,7 +24,10 @@
 
 ### 方式一：直接下载 exe（推荐 · 不用装 Python）
 
-到 [Releases](../../releases/latest) 页面下载 `金币雨.exe`，**双击即可**。
+到 [Releases](../../releases/latest) 页面，二选一下载：
+
+- **`coin-rain.exe`** — 直链下载，双击即用（GitHub Releases 不支持中文文件名，所以直链是 ASCII；运行起来窗口、品牌、动画都是「金币雨」）
+- **`coin-rain-v1.0.0.zip`** — 想让磁盘上的文件名是「金币雨.exe」就下这个，解压后双击
 
 首次双击会弹出配置向导，填好日收入 / 雨势 / 触发时间，点「保 存 并 启 用」自动注册到 Windows 任务计划程序。之后每天到点自动播放。
 
