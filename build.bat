@@ -1,6 +1,7 @@
 @echo off
-REM 一键打包 coin_rain.exe
+REM 一键打包 金币雨.exe
 REM 用法：双击本文件即可
+chcp 65001 >nul
 
 setlocal
 cd /d "%~dp0"
@@ -11,20 +12,12 @@ python -m pip install -r requirements.txt || goto :err
 echo [2/3] Cleaning old build...
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
-if exist coin_rain.spec del /q coin_rain.spec
 
-echo [3/3] Building exe with PyInstaller...
-python -m PyInstaller ^
-  --onefile ^
-  --windowed ^
-  --name coin_rain ^
-  --add-data "assets/coin_drop.wav;assets" ^
-  --add-data "assets/fonts;assets/fonts" ^
-  --add-data "style.qss;." ^
-  coin_rain.py || goto :err
+echo [3/3] Building exe with PyInstaller (using coin_rain.spec)...
+python -m PyInstaller --noconfirm coin_rain.spec || goto :err
 
 echo.
-echo === Build succeeded: dist\coin_rain.exe ===
+echo === Build succeeded: dist\金币雨.exe ===
 pause
 exit /b 0
 

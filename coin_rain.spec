@@ -151,7 +151,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='coin_rain',
+    name='金币雨',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -1,9 +1,9 @@
-# 注册每日 17:00 运行 coin_rain.exe 的任务计划
+# 注册每日 17:00 运行 金币雨.exe 的任务计划
 # 用法：右键 -> 使用 PowerShell 运行
 
 $ErrorActionPreference = 'Stop'
 $TaskName = 'CoinRainDaily'
-$ExePath = Join-Path $PSScriptRoot 'dist\coin_rain.exe'
+$ExePath = Join-Path $PSScriptRoot 'dist\金币雨.exe'
 
 if (-not (Test-Path $ExePath)) {
     Write-Error "找不到 $ExePath。请先双击 build.bat 完成打包。"

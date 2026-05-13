@@ -9,14 +9,14 @@
 ## 安装（3 步）
 
 1. **打包 exe**：双击 `build.bat`
-   → 自动安装依赖 + 生成 `dist\coin_rain.exe`
+   → 自动安装依赖 + 生成 `dist\金币雨.exe`
 2. **注册每日触发**：右键 `install_schedule.ps1` → 使用 PowerShell 运行
    → 自动注册名为 `CoinRainDaily` 的任务计划
 3. **立即试一下**（不想等到 17:00）：
    ```powershell
    Start-ScheduledTask -TaskName CoinRainDaily
    ```
-   或直接双击 `dist\coin_rain.exe`。
+   或直接双击 `dist\金币雨.exe`。
 
 ## 卸载
 
@@ -45,12 +45,12 @@
 | `build.bat` | 一键打包脚本 |
 | `install_schedule.ps1` | 注册每日 17:00 任务 |
 | `uninstall_schedule.ps1` | 卸载任务 |
-| `dist/coin_rain.exe` | 打包产物（约 44 MB） |
+| `dist/金币雨.exe` | 打包产物（约 44 MB） |
 | `docs/` | 设计文档和实施计划 |
 
 ## 排错
 
-- **双击 exe 没反应**：在 cmd 里运行 `dist\coin_rain.exe`，看有无报错；首次启动会有 1-2 秒解压延迟（PyInstaller onefile 的正常表现）
+- **双击 exe 没反应**：在 cmd 里运行 `dist\金币雨.exe`，看有无报错；首次启动会有 1-2 秒解压延迟（PyInstaller onefile 的正常表现）
 - **没声音**：确认系统音量没静音；确认 `assets\coin_drop.wav` 能用播放器打开；若仍无声，重跑 `build.bat` 重打包
 - **17:00 没触发**：打开「任务计划程序」，查找 `CoinRainDaily`，看「上次运行结果」；确认触发时你处于**登录状态**（未登录不触发）
 - **窗口不透明或无法穿透**：Windows 版本过低（需 Win10+），或显卡驱动异常

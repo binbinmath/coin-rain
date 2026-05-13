@@ -46,8 +46,8 @@ Windows 桌面小工具：**每天按用户配置的时间**在主屏弹出 3–
 
 ### 打包 / 测试
 
-- `build.bat` —— 一键打包脚本（含三个 `--add-data`：wav、fonts、qss）
-- `coin_rain.spec` —— PyInstaller spec（由 build.bat 自动生成）
+- `build.bat` —— 一键打包脚本（直接调 `coin_rain.spec`，不再删除重建）
+- `coin_rain.spec` —— PyInstaller spec（**手维护**，含 Qt 子树裁剪 + icon + 所有 `--add-data`）。输出 `dist\金币雨.exe`
 - `tests/test_logic.py` —— 15 个 pytest，覆盖 `_compute_amount` / `Config.load/save` / `_distribute_times`
 
 ### 文档
